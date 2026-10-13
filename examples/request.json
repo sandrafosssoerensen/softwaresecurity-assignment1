@@ -1,0 +1,1 @@
+{"alert":{"event_type":"alert","timestamp":"2026-10-13T10:00:00Z","src_ip":"192.0.2.10","dest_ip":"192.0.2.20","proto":"TCP","src_port":42000,"dest_port":443,"alert":{"signature_id":9000001,"signature":"Synthetic lab alert for testing","severity":2}}}

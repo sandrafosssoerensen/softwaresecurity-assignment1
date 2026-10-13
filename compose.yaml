@@ -1,0 +1,37 @@
+services:
+  a:
+    build: .
+    environment:
+      SERVICE: A
+      DATA_DIR: /data
+      PRIVATE_KEY_PATH: /keys/private.pem
+      PUBLIC_KEY_PATH: /keys/public.pem
+      B_URL: http://b:8000
+      C_URL: http://c:8000
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./.runtime/data/A:/data
+      - ./.runtime/keys/private.pem:/keys/private.pem:ro
+      - ./.runtime/keys/public.pem:/keys/public.pem:ro
+    depends_on:
+      - b
+      - c
+  b:
+    build: .
+    environment:
+      SERVICE: B
+      DATA_DIR: /tmp/b
+      PUBLIC_KEY_PATH: /keys/public.pem
+      C_URL: http://c:8000
+    volumes:
+      - ./.runtime/keys/public.pem:/keys/public.pem:ro
+  c:
+    build: .
+    environment:
+      SERVICE: C
+      DATA_DIR: /data
+      PUBLIC_KEY_PATH: /keys/public.pem
+    volumes:
+      - ./.runtime/data/C:/data
+      - ./.runtime/keys/public.pem:/keys/public.pem:ro
