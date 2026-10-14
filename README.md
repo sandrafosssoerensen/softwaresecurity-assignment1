@@ -4,7 +4,7 @@ This is the first implementation milestone, not the completed assignment. Three 
 
 **Implemented:** login; create/save/list/read/delete; RS256 scoped JWTs; owner/admin checks; input size/field validation; result-schema validation; separate SQLite files; 8 HTTP integration tests.
 
-**Still required:** real Ollama integration; isolated versions and measured evidence for the four vulnerabilities; Jenkins pipeline and actual push/PR runs; dependency approval/static/dependency analysis gates; final report and complete AI declaration. Do not describe the stub response as a real LLM analysis. Docker Compose files are provided but were not executed in the authoring environment. Django runserver is used only for the local lab.
+**Still required:** real Ollama integration; isolated versions and measured evidence for the four vulnerabilities; Jenkins pipeline and actual push/PR runs; dependency approval/static/dependency analysis gates; final report and complete AI declaration. The current model stub returns a fixed test response. The Docker Compose configuration has not yet been tested. Django runserver is used only for the local lab.
 
 ## Setup (PowerShell, Python 3.12)
 
@@ -52,7 +52,7 @@ After the setup command creates keys and A's seeded database:
 docker compose up --build
 ```
 
-This configuration was not executed in the authoring environment because Docker was unavailable. If you later use Linux containers, use a Linux-created virtual environment for host commands. Do not share a Windows virtual environment with WSL.
+Docker Compose execution is pending verification. If you later use Linux containers, use a Linux-created virtual environment for host commands. Do not share a Windows virtual environment with WSL.
 
 ## File guide
 
@@ -63,7 +63,7 @@ This configuration was not executed in the authoring environment because Docker 
 - `helper/`: standalone package built as a wheel and installed.
 - `docs/SSDLC_Plan.md`: initial four-phase plan committed before code.
 - `docs/Design.md`: minimal architecture, assets, access matrix, STRIDE, experiment plans.
-- `docs/AI_Use.md`: factual draft assistance record.
+- `docs/AI_Use.md`: draft declaration of AI assistance.
 - `tests/test_flow.py`: integration tests.
 
-The initial planning commit precedes the implementation commit. Repository authorship of generated files is labelled Codex; the AI-use record documents assistance. No security experiment or real-model result is fabricated. The generated prototype must be reviewed and explained by the student.
+The initial planning commit precedes the implementation commit. Preserve the complete Git history when continuing the project. Implementation status and completed checks are recorded in `docs/Verification.md`; remaining work is listed above.

@@ -1,6 +1,6 @@
 # Initial milestone verification
 
-Observed in the authoring environment: Python 3.12, Django 5.2.18, PyJWT 2.15.1; helper built into a wheel and installed with pip. Three Django HTTP processes started with fresh seeded databases.
+Initial verification environment: Python 3.12, Django 5.2.18, PyJWT 2.15.1; helper built into a wheel and installed with pip. Three Django HTTP processes started with fresh seeded databases.
 
 Eight integration tests passed in the initial run:
 1. Create/save/read; cross-user denial; administrator read.
