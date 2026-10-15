@@ -17,7 +17,10 @@ ROOT = Path(__file__).resolve().parents[1]
 class FlowTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.temp = tempfile.TemporaryDirectory()
+        # Windows can briefly keep a subprocess log handle open after the
+        # server process has terminated. Do not turn that cleanup race into a
+        # failed test run; the temporary directory is only test data.
+        cls.temp = tempfile.TemporaryDirectory(ignore_cleanup_errors=(os.name == "nt"))
         cls.runtime = Path(cls.temp.name)
         cls.logs = []
         cls.processes = []
