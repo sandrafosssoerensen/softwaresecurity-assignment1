@@ -119,8 +119,8 @@ def analyze(request):
     claims = authority(request, "B", "execute")
     data = body(request, {"alert", "storage_token"})
     encoded = json.dumps(data["alert"], ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    # if len(encoded) > 65536:
-    #     raise ApiError(413, "INPUT_TOO_LARGE")
+    if len(encoded) > 65536:
+        raise ApiError(413, "INPUT_TOO_LARGE")
     selected = select_alert(data["alert"])
     target = verify(data["storage_token"], "C", "create")
     if (target["sub"], target.get("analysis_id")) != (claims["sub"], claims.get("analysis_id")):
