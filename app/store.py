@@ -24,7 +24,7 @@ def read(analysis_id, owner, admin):
     try:
         row = db.execute("SELECT * FROM analyses WHERE id=?", (analysis_id,)).fetchone()
         if row is None or (not admin and row["owner"] != owner):
-            return None
+         return None
         return {"id": row["id"], "owner": row["owner"], **json.loads(row["document"])}
     finally:
         db.close()
