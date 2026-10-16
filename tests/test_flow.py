@@ -135,6 +135,35 @@ class FlowTests(unittest.TestCase):
         data=json.loads((ROOT/"examples/request.json").read_text());data["owner_id"]="2"
         self.assertEqual(requests.post(self.urls["A"]+"/analyses",headers=self.headers(),json=data,timeout=5).status_code,400)
 
+    def test_untrusted_owner_field_cannot_change_owner(self):
+        original = self.create()
+        analysis_id = str(uuid4())
+        fields = ("original_alert", "model_input", "model", "prompt_version", "settings",
+                  "latency_seconds", "created_at", "result")
+        document = {field: original[field] for field in fields}
+        document["owner_id"] = "2"
+
+        create_token = self.service_token("C", "create", analysis_id, subject="1")
+        create_response = requests.post(
+            self.urls["C"] + "/internal/analyses",
+            headers={"Authorization": "Bearer " + create_token},
+            json=document,
+            timeout=5,
+        )
+
+        bob_token = self.service_token("C", "read", analysis_id, subject="2")
+        bob_response = requests.get(
+            self.urls["C"] + "/internal/analyses/" + analysis_id,
+            headers={"Authorization": "Bearer " + bob_token},
+            timeout=5,
+        )
+
+        self.assertEqual(
+            (create_response.status_code, bob_response.status_code),
+            (400, 404),
+            f"create={create_response.text}; bob_read={bob_response.text}",
+        )
+
     def test_size_limit_direct_b(self):
         data=json.loads((ROOT/"examples/request.json").read_text())
         data["alert"]["padding"]="x"*66000
