@@ -155,13 +155,16 @@ def stored_analyses(request, analysis_id=None):
     admin = claims["role"] == "admin"
     if request.method == "POST":
         document = body(request, {"original_alert", "model_input", "model", "prompt_version", "settings",
-                                  "latency_seconds", "created_at", "result"})
+                                          "latency_seconds", "created_at", "result"})
+        # document = body(request, {"original_alert", "model_input", "model", "prompt_version", "settings", 
+        #                          "latency_seconds", "created_at", "result", "owner_id"})
         selected = select_alert(document["original_alert"])
         if document["model_input"] != selected:
             raise ApiError(400, "MODEL_INPUT_MISMATCH")
         validate_result(document["result"], selected)
         UUID(claims["analysis_id"])
         store.create(claims["analysis_id"], claims["sub"], document)
+        # store.create(claims["analysis_id"], document["owner_id"], document)
         return JsonResponse({"id": claims["analysis_id"], "owner": claims["sub"], **document}, status=201)
     if request.method == "GET" and analysis_id is None:
         return JsonResponse({"analyses": store.listing(claims["sub"], admin)})
