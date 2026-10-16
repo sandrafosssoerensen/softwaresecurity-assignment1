@@ -119,6 +119,9 @@ def analyze(request):
     claims = authority(request, "B", "execute")
     data = body(request, {"alert", "storage_token"})
     encoded = json.dumps(data["alert"], ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    # CWE-20 vulnerable experiment: temporarily comment out the active check.
+    # if len(encoded) > 65536:
+    #     raise ApiError(413, "INPUT_TOO_LARGE")
     if len(encoded) > 65536:
         raise ApiError(413, "INPUT_TOO_LARGE")
     selected = select_alert(data["alert"])
@@ -156,14 +159,16 @@ def stored_analyses(request, analysis_id=None):
     if request.method == "POST":
         document = body(request, {"original_alert", "model_input", "model", "prompt_version", "settings",
                                           "latency_seconds", "created_at", "result"})
-        # document = body(request, {"original_alert", "model_input", "model", "prompt_version", "settings", 
-        #                          "latency_seconds", "created_at", "result", "owner_id"})
+        # CWE-807 vulnerable experiment: accept an untrusted owner_id field.
+        # document = body(request, {"original_alert", "model_input", "model", "prompt_version", "settings",
+        #                           "latency_seconds", "created_at", "result", "owner_id"})
         selected = select_alert(document["original_alert"])
         if document["model_input"] != selected:
             raise ApiError(400, "MODEL_INPUT_MISMATCH")
         validate_result(document["result"], selected)
         UUID(claims["analysis_id"])
         store.create(claims["analysis_id"], claims["sub"], document)
+        # CWE-807 vulnerable experiment: trust owner_id instead of the token claim.
         # store.create(claims["analysis_id"], document["owner_id"], document)
         return JsonResponse({"id": claims["analysis_id"], "owner": claims["sub"], **document}, status=201)
     if request.method == "GET" and analysis_id is None:
