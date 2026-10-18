@@ -31,6 +31,12 @@ Principles: complete mediation (every C operation checked), least privilege (B r
 
 ## Jenkins plan
 
+## Current implementation status
+
+The plan above describes the initial state and is preserved in the Git history. The current `assignment-work` branch now contains the secure A/B/C baseline, scoped RS256 tokens, input validation, ownership checks, parameterized SQL, nine passing flow tests, one passing focused SQL regression test, and vulnerable/corrected evidence for CWE-20, CWE-862, CWE-89, and the composition/CWE-807 experiment.
+
+Jenkins build #4 completed successfully on `assignment-work`. The pipeline builds the helper wheel, installs dependencies, runs Bandit and pip-audit, applies a high-severity security gate, runs the tests, and archives reports. Remaining work is the final report, final evidence review, and explicit discussion of limitations such as the deterministic model stub and unverified Docker Compose run.
+
 On each push/PR: validate/build, run Bandit and pip-audit, start fresh test environment, seed, run functional/authorization tests, archive logs/reports even on failure, clean up. Required test failures, build/scan failures, unapproved dependencies, unresolved high-severity static findings, and unresolved high/critical dependency advisories block release. Unclassified dependency findings require review. Any narrow exception requires documented evidence; required security guarantees cannot be waived.
 
 No pipeline execution or vulnerability evidence exists at the initial planning stage. Preserve full Git history and record AI assistance. Report target: 2,000–2,500 words excluding figures/tables/references/appendices. README must contain exact build/seed/run/test commands. Finish real model integration, vulnerability variants, Jenkins, experiments, and report before submission.

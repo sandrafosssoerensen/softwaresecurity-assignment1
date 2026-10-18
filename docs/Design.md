@@ -34,6 +34,10 @@ Output: observation, interpretation, uncertainty (nonblank strings), recommended
 
 ## Planned tests and experiments
 
+## Completed experiment status
+
+The planned experiments were carried out and recorded in `docs/evidence/`. The final secure branch retains the protections for CWE-20, CWE-862, CWE-89, and the composition/CWE-807 flaw. The experiment results should be referenced together with the corresponding Git commits in the final report.
+
 Functional create/list/read/delete; own vs other user; ordinary vs admin; direct C attempts; B deletion denied; forged/expired/wrong audience tokens; malformed/oversized alerts; helper error; model schema error; model stub for deterministic tests.
 
 Three catalogue experiments: CWE-20 omitted size check, CWE-862 omitted C ownership check, CWE-89 unsafe interpolation in C query. Fourth composition experiment: vulnerable C accepts B's unverified owner field. Corrected C uses verified claims. Test reachability and actual effects with unrelated controls enabled. Use controlled lab fixtures, correct and retest. No experiment result is claimed yet.

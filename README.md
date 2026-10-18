@@ -67,3 +67,11 @@ Docker Compose execution is pending verification. If you later use Linux contain
 - `tests/test_flow.py`: integration tests.
 
 The initial planning commit precedes the implementation commit. Preserve the complete Git history when continuing the project. Implementation status and completed checks are recorded in `docs/Verification.md`; remaining work is listed above.
+
+## Current verification status
+
+The secure `assignment-work` branch currently contains nine passing flow tests, a passing focused SQL regression test, four isolated vulnerability experiments with vulnerable/corrected evidence, and a Jenkins pipeline.
+
+Jenkins build #4 successfully checked out `assignment-work`, created a fresh Python environment, built the helper wheel, installed dependencies, ran Bandit, ran pip-audit, applied the security gate, ran both test suites, and archived reports.
+
+Remaining limitations are the deterministic model stub, the unverified Docker Compose run, and the need to complete the final report and final submission review.
