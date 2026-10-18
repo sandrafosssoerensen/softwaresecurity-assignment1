@@ -8,6 +8,7 @@ pipeline {
     }
 
     environment {
+        PYTHON = "C:\\Users\\sandr\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
         CI_PYTHON = ".jenkins-venv\\Scripts\\python.exe"
         REPORT_DIR = "reports"
     }
@@ -28,7 +29,7 @@ pipeline {
             steps {
                 bat """
                     if not exist %REPORT_DIR% mkdir %REPORT_DIR%
-                    python -m venv .jenkins-venv
+                    %PYTHON% -m venv .jenkins-venv
                     %CI_PYTHON% -m pip install --upgrade pip
                     %CI_PYTHON% -m pip install -r requirements.txt -r requirements-build.txt
                     %CI_PYTHON% -m build --wheel --no-isolation helper
