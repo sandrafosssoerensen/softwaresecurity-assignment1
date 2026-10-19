@@ -188,4 +188,3 @@ is not met.
 The supplied assignment does not require Docker or Ollama specifically.
 The stub and unverified Compose configuration must be described honestly;
 they are separate from the outstanding experiment and CI requirements.
-
