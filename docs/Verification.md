@@ -13,3 +13,4 @@ Eight integration tests passed in the initial run:
 8. Forged token rejection.
 
 These checks validate the stub-backed milestone only. They are not evidence of real Ollama integration, a complete security assessment, planted vulnerability experiments, Jenkins operation, or Docker execution. Those are still pending.
+
