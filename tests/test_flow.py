@@ -24,17 +24,21 @@ class FlowTests(unittest.TestCase):
         cls.runtime = Path(cls.temp.name)
         cls.logs = []
         cls.processes = []
+
         seed_env = os.environ.copy()
         seed_env.update(SERVICE="A", DATA_DIR=str(cls.runtime / "A"), LAB_RUNTIME_DIR=str(cls.runtime))
         subprocess.run([sys.executable, "scripts/setup_lab.py"], cwd=ROOT, env=seed_env,
                        check=True, stdout=subprocess.DEVNULL)
+        
         cls.urls = {s: "http://127.0.0.1:" + str(18000+i) for i, s in enumerate("ABC")}
+
         try:
             for i, service in enumerate("ABC"):
                 env = os.environ.copy()
                 env.update(SERVICE=service, DATA_DIR=str(cls.runtime / service),
                            PUBLIC_KEY_PATH=str(cls.runtime / "keys/public.pem"),
                            B_URL=cls.urls["B"], C_URL=cls.urls["C"])
+                
                 if service == "A":
                     env["PRIVATE_KEY_PATH"] = str(cls.runtime / "keys/private.pem")
                 log = (cls.runtime / (service + ".log")).open("w")
@@ -42,7 +46,9 @@ class FlowTests(unittest.TestCase):
                 cls.processes.append(subprocess.Popen([sys.executable, "manage.py", "runserver",
                     "127.0.0.1:"+str(18000+i), "--noreload"], cwd=ROOT, env=env,
                     stdout=log, stderr=log))
+                
             deadline = time.monotonic()+20
+
             for url in cls.urls.values():
                 while True:
                     try:
@@ -53,12 +59,15 @@ class FlowTests(unittest.TestCase):
                     if time.monotonic() > deadline:
                         raise RuntimeError("Server startup failed")
                     time.sleep(0.1)
+
             cls.tokens = {}
+
             for username in ("alice", "bob", "admin"):
                 response = requests.post(cls.urls["A"]+"/auth/token", json={"username": username,
                     "password": "Lab-only-Password-123!"}, timeout=5)
                 response.raise_for_status()
                 cls.tokens[username] = response.json()["access_token"]
+
         except Exception:
             cls.tearDownClass()
             raise
@@ -67,14 +76,17 @@ class FlowTests(unittest.TestCase):
     def tearDownClass(cls):
         for process in cls.processes:
             process.terminate()
+
         for process in cls.processes:
             try:
                 process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.wait()
+
         for log in cls.logs:
             log.close()
+            
         cls.temp.cleanup()
 
     def headers(self, user="alice"):

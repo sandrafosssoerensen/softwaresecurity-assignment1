@@ -1,77 +1,146 @@
-# Software Security — Minimal V1 Starter
+# Software Security Assignment I — Alert-analysis prototype
 
-This is the first implementation milestone, not the completed assignment. Three Django processes implement a synchronous A → B → C alert-analysis flow. A authenticates seeded users; B uses the separately installed helper package and a labelled development model stub; C saves analyses and enforces resource permissions.
+This Python/Django teaching application accepts a synthetic Suricata alert,
+validates it, produces a deterministic summary, and stores the result for its
+owner. It supports login, create, list, read, and administrator-only deletion.
 
-**Implemented:** login; create/save/list/read/delete; RS256 scoped JWTs; owner/admin checks; input size/field validation; result-schema validation; separate SQLite files; 8 HTTP integration tests.
+Three separate application processes share a codebase and communicate over
+HTTP. A authenticates users and issues scoped authority; B processes alerts;
+C owns the stored results and enforces access control. The database and the
+installed helper package are not additional application services.
 
-**Still required:** real Ollama integration; isolated versions and measured evidence for the four vulnerabilities; Jenkins pipeline and actual push/PR runs; dependency approval/static/dependency analysis gates; final report and complete AI declaration. The current model stub returns a fixed test response. The Docker Compose configuration has not yet been tested. Django runserver is used only for the local lab.
+For a complete demonstration, use [How to run](docs/How_To_Run.md). For
+architecture and authority flow, see [Design](docs/Design.md).
 
-## Setup (PowerShell, Python 3.12)
+## Current status
 
-Extract the ZIP and open a terminal in the `software-security-v1` folder. Preserve the included Git history.
+The `assignment-work` branch contains the corrected input-size, ownership,
+SQL, and token controls. Saved Jenkins build #4 reports show nine passing HTTP
+tests and one passing SQL test. These are historical results, not a new run
+of every future revision.
+
+Three experiments have logs showing their intended effect: CWE-20,
+CWE-862, and CWE-89. The cited CWE-862/CWE-89 snapshots do not reproduce their
+logs unchanged and need new runnable variants. The composition/CWE-807 attempt has a passing corrected
+test, but its saved vulnerable run stops during fixture creation and does
+not yet demonstrate ownership confusion.
+
+The remaining submission work includes completing that experiment, correcting
+and verifying CI failure propagation, enforcing the dependency approval gate,
+proving push/PR builds, and completing the report and AI-use declaration.
+[Verification](docs/Verification.md) records the evidence and exact open items.
+
+## Setup — PowerShell, Python 3.12
+
+Use the repository directory containing `manage.py`, `Jenkinsfile`, and
+`requirements.txt`. In the current extracted layout this is the inner
+`software-security-v1/software-security-v1` directory.
+
+For a fresh clone with repository access:
+
+```powershell
+git clone --branch assignment-work https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git
+cd softwaresecurity-assignment1
+```
+
+Do not clone again if you already have the working copy. Preserve its Git
+history; a GitHub source ZIP alone does not include `.git`.
+
+Build, install, and seed:
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-build.txt
 .\.venv\Scripts\python.exe -m build --wheel --no-isolation helper
-.\.venv\Scripts\python.exe -m pip install --no-deps helper/dist/alert_helper-0.1.0-py3-none-any.whl
-.\.venv\Scripts\python.exe scripts/setup_lab.py
+.\.venv\Scripts\python.exe -m pip install --no-deps helper\dist\alert_helper-0.1.0-py3-none-any.whl
+.\.venv\Scripts\python.exe scripts\setup_lab.py
 ```
 
-Known lab accounts: `alice`, `bob`, `admin`. Password for all three: `Lab-only-Password-123!`. These are synthetic teaching accounts, never production credentials. Private keys and runtime databases are generated locally and excluded from Git and the ZIP. Only A needs the private key.
+The project-owned dependency is `alert-helper` version `0.1.0`, declared in
+[helper/pyproject.toml](helper/pyproject.toml) and installed separately as a
+wheel. The shared views use its alert and result validators; B uses it during
+processing.
 
-## Run three local processes
+Synthetic accounts are `alice`, `bob` (ordinary users), and `admin`
+(privileged user). Their lab password is `Lab-only-Password-123!`.
+Seed setup creates local RSA keys and A's authentication database. Repeating
+setup resets these account passwords; it does not erase C's analyses.
 
-In three terminals, from the project folder:
+Generated keys/databases are under `.runtime/`, excluded by `.gitignore`.
+The launch script supplies the private-key path only to A. Local processes
+run under the same OS user; this is not filesystem isolation.
+
+## Run
+
+Run each command in a separate terminal, from the repository root:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/serve.py A
-.\.venv\Scripts\python.exe scripts/serve.py B
-.\.venv\Scripts\python.exe scripts/serve.py C
+.\.venv\Scripts\python.exe scripts\serve.py A
 ```
 
-A is on localhost:8000, B on :8001, C on :8002. The local-process mode exposes all three on loopback for learning/testing; Compose publishes only A.
+```powershell
+.\.venv\Scripts\python.exe scripts\serve.py B
+```
 
-Use an API client to POST `/auth/token` on A with JSON username/password. Use the returned access token in `Authorization: Bearer ...`. POST `examples/request.json` to `/analyses`. GET `/analyses` or `/analyses/{id}`. DELETE `/analyses/{id}` requires an admin token. POST returns 201 only after C saves the analysis.
+```powershell
+.\.venv\Scripts\python.exe scripts\serve.py C
+```
+
+A listens on `http://127.0.0.1:8000`, B on port 8001, and C on port 8002.
+Use A's `/auth/token` and `/analyses` endpoints. The
+[PowerShell examples](docs/How_To_Run.md#5-use-the-application) show login,
+creation, reads, denied access, and administrator deletion. Stop each
+service with Ctrl+C.
 
 ## Test
 
-```powershell
-.\.venv\Scripts\python.exe tests/test_flow.py
-```
-
-Tests use isolated temporary databases/keys and three server processes on ports 18000–18002. Keep these ports free. No real model is needed. Tests clean up their processes. The tests themselves create/seed their temporary environment.
-
-On Linux/WSL, use `python3 -m venv .venv` and `.venv/bin/python` instead of the Windows executable paths.
-
-## Optional local container launch
-
-After the setup command creates keys and A's seeded database:
+No manually started servers are needed for these commands:
 
 ```powershell
-docker compose up --build
+.\.venv\Scripts\python.exe tests\test_store_sql.py
+.\.venv\Scripts\python.exe tests\test_flow.py
 ```
 
-Docker Compose execution is pending verification. If you later use Linux containers, use a Linux-created virtual environment for host commands. Do not share a Windows virtual environment with WSL.
+Expected results for the corrected baseline are one SQL test and nine HTTP
+tests passing. The SQL test uses a temporary database. The HTTP suite seeds
+temporary users/keys/databases and starts three processes on ports
+18000–18002; keep those ports free.
 
-## File guide
+## Jenkins
 
-- `app/urls.py`: routes selected for each process.
-- `app/views.py`: request flow, token checks, model stub, and safe responses.
-- `app/security.py`: A's token issuance and fixed-algorithm verification.
-- `app/store.py`: C's parameterized SQLite queries and owner checks.
-- `helper/`: standalone package built as a wheel and installed.
-- `docs/SSDLC_Plan.md`: initial four-phase plan committed before code.
-- `docs/Design.md`: minimal architecture, assets, access matrix, STRIDE, experiment plans.
-- `docs/AI_Use.md`: draft declaration of AI assistance.
-- `tests/test_flow.py`: integration tests.
+[Jenkinsfile](Jenkinsfile) defines checkout, environment setup, helper build,
+Bandit on `app/`, pip-audit on `requirements.txt`, a high-severity Bandit gate,
+tests, and report archiving. It currently uses Windows `bat` steps and a
+machine-specific Python path.
 
-The initial planning commit precedes the implementation commit. Preserve the complete Git history when continuing the project. Implementation status and completed checks are recorded in `docs/Verification.md`; remaining work is listed above.
+Saved [build #4 artifacts](docs/evidence/jenkins/build-4/) contain passing test
+output, one low-severity Bandit finding, and no advisories reported by that
+dependency scan. This does not prove every failure blocks the pipeline:
+multi-command batch blocks need explicit failure propagation. Automatic
+push/PR triggering and dependency approval also need final verification.
+See [Verification](docs/Verification.md#jenkins-evidence-and-gaps).
 
-## Current verification status
+## Documentation
 
-The secure `assignment-work` branch currently contains nine passing flow tests, a passing focused SQL regression test, four isolated vulnerability experiments with vulnerable/corrected evidence, and a Jenkins pipeline.
+- [How to run](docs/How_To_Run.md): install, start, use, test, and troubleshoot.
+- [Design](docs/Design.md): requirements, data flow, permissions, threats, and principles.
+- [SSDLC plan and status](docs/SSDLC_Plan.md): original planning reference, phases, and gates.
+- [Requirements traceability](docs/Requirements_Traceability.md): requirements mapped to evidence and gaps.
+- [Verification](docs/Verification.md): recorded results and remaining submission checks.
+- [Vulnerability experiments](docs/Vulnerability_Experiments_Guide.md): changes, tests, effects, and limitations.
+- [Implementation guide](docs/Implementation_Guide.md): learning path for rebuilding from scratch.
+- [AI-use declaration](docs/AI_Use.md): assistance used; final author review remains.
 
-Jenkins build #4 successfully checked out `assignment-work`, created a fresh Python environment, built the helper wheel, installed dependencies, ran Bandit, ran pip-audit, applied the security gate, ran both test suites, and archived reports.
+## Scope and limitations
 
-Remaining limitations are the deterministic model stub, the unverified Docker Compose run, and the need to complete the final report and final submission review.
+The processor is explicitly labelled `development-stub`; there is no live
+Ollama/LLM integration or claim of meaningful threat assessment. The supplied
+assignment does not require a particular model or container platform.
+
+[compose.yaml](compose.yaml) and [Dockerfile](Dockerfile) are an optional,
+unverified launch configuration. The verified evidence uses separate local
+processes. The optional malicious supply-chain exercise was not performed.
+
+This is a local HTTP lab using Django `runserver`. TLS, rate limiting,
+separate OS identities, key rotation/revocation, durable jobs, audit logging,
+and production model evaluation are not implemented.

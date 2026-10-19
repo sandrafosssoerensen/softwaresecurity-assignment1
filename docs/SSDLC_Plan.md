@@ -1,42 +1,106 @@
-# Initial SSDLC Plan — Minimal V1
+# SSDLC plan and implementation status
 
-Status: initial plan, committed before feature implementation. This is a teaching prototype, not a completed submission.
+The original four-phase plan is preserved in commit `8e1b610`
+(`Document minimal scope and initial four-phase SSDLC plan`), before feature
+implementation in `7f04cee`. This file now records the plan and subsequent
+status; later additions must not be represented as decisions recorded earlier.
+
+To inspect the original:
+
+```powershell
+git show 8e1b610:docs/SSDLC_Plan.md
+```
 
 ## Scope
 
-Three separate Django processes communicate over HTTP: A handles login/API, B performs one synchronous alert analysis using an installed helper package, and C owns stored analyses and resource authorization. A and C have separate SQLite files. A owns the private JWT signing key; B/C only verify signatures. A → B → C creates and saves an analysis; A → C lists, reads, and deletes.
+Three Django processes communicate over HTTP. A handles authentication and
+coordination, B validates/processes one alert using the installed helper, and
+C owns analyses and enforces resource access. A → B → C creates a result;
+A → C lists, reads, and deletes. A and C use separate SQLite files.
 
-Seed two ordinary users and one administrator. Ordinary users may list/read their own results; only an administrator may delete and may access all results. An API client is sufficient. No GUI, registration, background jobs, queue, polling, cancellation, dedicated audit system, or optional supply-chain experiments. A model stub supports deterministic development; real Ollama integration follows separately.
+Two ordinary users and one administrator are seeded. Ordinary users access
+their own analyses; an administrator can access all and delete. The interface
+is an API. Registration, a GUI, background jobs, public hosting, and the
+optional malicious supply-chain exercise are outside the chosen scope.
+
+The current processor is a labelled deterministic stub. The original plan
+anticipated later Ollama integration, but no such integration is implemented
+or required by the supplied assignment. Docker Compose is an unverified
+optional configuration; separate local processes are the documented run mode.
 
 ## Four phases and gates
 
-| Phase | Deliverable/activity | Gate |
+| Phase | Planned deliverable and gate | Current status |
 |---|---|---|
-| Requirements | Scope, operations, assets, trust boundaries, access matrix, STRIDE, non-functional requirements, three principles, four experiment plans | Review that architecture/permissions/controls meet the assignment; commit this plan before code |
-| Implementation/build | Three components, helper wheel installed as a dependency, pinned approved dependencies, repeatable commands | Build succeeds; unexpected/unapproved dependencies rejected; blocking findings resolved |
-| Testing | Fresh environment with seed users; functional/authorization tests; isolated vulnerability experiments, corrections, and evidence | Required corrected-version tests pass; malformed inputs/results rejected; confirmed security violations block release |
-| Release/operation | Discuss transport security, key lifecycle, backups, monitoring, updates, and model evaluation | Document production limitations; no production deployment planned |
+| Requirements | Scope, operations, assets, boundaries, access matrix, STRIDE, and principles reviewed before implementation. | Original plan/design committed first; current details in [Design](Design.md). |
+| Implementation/build | Three components and an installed helper; repeatable build; reject unexpected/unapproved dependencies or artifacts. | Components/helper implemented; dependency approval enforcement is still missing. Version pins do not provide that gate by themselves. |
+| Testing | Fresh functional/authorization tests; malformed input rejection; demonstrate and correct vulnerabilities; required failures block release. | Nine HTTP tests and one SQL test pass in saved evidence. Composition demonstration and reliable CI failure propagation remain open. |
+| Release/operation | Document production needs and review evidence, report, and AI declaration before submission. | No production deployment. Final report, author review, and submission checks remain. |
 
 ## Asset → threat → control → activity → evidence → gate
 
-| Asset/threat | Control | Evidence/gate |
-|---|---|---|
-| Analysis availability / oversized input (CWE-20) | B rejects alerts exceeding 64 KiB of compact UTF-8 JSON before invoking the model | Rejection with zero model calls; measure vulnerable-version effect; failure blocks corrected release |
-| Analysis confidentiality / missing authorization (CWE-862) | C checks owner or administrator on every resource access; deletion admin only | Own/admin positive tests and cross-user/direct-C negative tests; disclosure blocks release |
-| Query integrity / SQL injection (CWE-89) | Parameterized queries | Isolated unsafe-query variant with controlled test input; record real query effects and whether other controls block disclosure; confirmed injection blocks release |
-| Ownership integrity / composition error | Verified owner and analysis ID bound to C create authority, not free owner field from B | Lab variant trusts B's owner field; correction rejects mismatch; wrong owner blocks release |
-| Signing keys/tokens / spoofing | Private key only A; fixed algorithm, issuer, audience, expiry, required claims | Forged/expired/wrong-audience tokens rejected; failures block release |
+| Asset/threat | Control and lifecycle activity | Evidence | Gate decision |
+|---|---|---|---|
+| Processing capacity / oversized input | Implement B's 64 KiB compact UTF-8 alert limit; remove/restore it in an isolated test. | CWE-20 logs show 201 in vulnerable mode versus expected 413 after correction. No model-call/resource-usage measurement was made. | Corrected test must reject the request. |
+| Analysis confidentiality / missing authorization | Enforce owner/admin checks at C; test cross-user reads and legitimate access. | CWE-862 logs show Bob receiving 200 versus corrected 404. | Unauthorized disclosure blocks release. |
+| Query integrity / SQL injection | Use parameterized SQL; compare a direct storage-query test with the unsafe variant. | CWE-89 logs show an injected ID returning a record versus corrected `None`. | SQL regression must pass; do not claim the UUID-filtered HTTP route was exploited. |
+| Ownership integrity / composition | Bind ownership to C's verified token, not a body field supplied across B–C. | Corrected rejection passes; vulnerable log fails before the attack request. | Open: reproduce actual wrong-owner storage/read and corrected denial. |
+| Authority / token misuse | Fixed algorithm, issuer/audience/expiry/scope/role checks and per-resource bindings. | Forged/expired/wrong-audience and create-token-delete tests. | Required authorization tests must pass. |
+| Dependency trust / unexpected artifacts | Declare installations and enforce an approved dependency inventory. | Requirements files and helper wheel exist; no inventory comparison/integrity gate yet. | Open: enforce rejection and demonstrate it. |
 
-Principles: complete mediation (every C operation checked), least privilege (B result authority cannot read/delete other resources), fail-safe defaults (invalid authority denied). Keep unrelated controls enabled in experiments and document prerequisites; do not claim failed exploits succeeded.
+Complete mediation, least privilege, and fail-safe defaults are mapped to
+implementation and tests in [Design](Design.md#secure-design-principles).
 
-## Jenkins plan
+## Jenkins implementation and release policy
 
-## Current implementation status
+The intended policy is to build/test pushes and pull requests, use fresh
+test data, preserve results, and fail on required security violations.
+The existing [Jenkinsfile](../Jenkinsfile) performs:
 
-The plan above describes the initial state and is preserved in the Git history. The current `assignment-work` branch now contains the secure A/B/C baseline, scoped RS256 tokens, input validation, ownership checks, parameterized SQL, nine passing flow tests, one passing focused SQL regression test, and vulnerable/corrected evidence for CWE-20, CWE-862, CWE-89, and the composition/CWE-807 experiment.
+- checkout and a new virtual environment;
+- application/build dependency installation and helper wheel build/install;
+- Bandit report generation for `app/` using `--exit-zero`;
+- pip-audit for `requirements.txt`;
+- a separate Bandit `-lll` gate for high-severity findings;
+- the SQL and HTTP test commands, then report archiving and workspace cleanup.
 
-Jenkins build #4 completed successfully on `assignment-work`. The pipeline builds the helper wheel, installs dependencies, runs Bandit and pip-audit, applies a high-severity security gate, runs the tests, and archives reports. Remaining work is the final report, final evidence review, and explicit discussion of limitations such as the deterministic model stub and unverified Docker Compose run.
+The actual dependency-audit command fails on reported vulnerabilities without
+a severity filter. It does not implement the earlier proposed
+high/critical-only dependency policy. The reviewed low-severity Bandit B105
+finding for `Bearer` is recorded in [Verification](Verification.md).
 
-On each push/PR: validate/build, run Bandit and pip-audit, start fresh test environment, seed, run functional/authorization tests, archive logs/reports even on failure, clean up. Required test failures, build/scan failures, unapproved dependencies, unresolved high-severity static findings, and unresolved high/critical dependency advisories block release. Unclassified dependency findings require review. Any narrow exception requires documented evidence; required security guarantees cannot be waived.
+The following must be resolved before claiming the complete policy works:
 
-No pipeline execution or vulnerability evidence exists at the initial planning stage. Preserve full Git history and record AI assistance. Report target: 2,000–2,500 words excluding figures/tables/references/appendices. README must contain exact build/seed/run/test commands. Finish real model integration, vulnerability variants, Jenkins, experiments, and report before submission.
+1. Multi-command Windows `bat` blocks do not explicitly stop after each failed
+   command. A SQL-test failure followed by a passing flow test can be hidden.
+   Split commands into checked steps or propagate each nonzero exit status,
+   then record a failing-control build and a passing corrected build.
+2. Application/build versions are listed, but `pip`, Bandit, pip-audit, and
+   some resolved dependencies are not fully pinned. No automated approval
+   inventory/hash comparison exists. Implement the required rejection gate.
+3. Bandit currently scans only `app/`; the helper/scripts are outside that
+   scan. pip-audit targets runtime requirements, not the complete build-tool
+   environment. Document or expand the chosen analysis scope.
+4. A successful multibranch scan was shown, but no push-triggered and
+   PR-triggered build evidence is saved here. Periodic scans may combine
+   multiple pushes; they do not prove a build for every push.
+5. Report files are archived when created. The test harness deletes temporary
+   service logs, produces no JUnit XML, and missing artifacts are allowed by
+   the pipeline. Do not claim those additional artifacts exist.
+
+Build #4 artifacts show a successful recorded run of both test suites and
+the scanners. They do not establish that failing controls or triggers were
+tested. Full details and evidence links are in [Verification](Verification.md).
+
+## Remaining submission work
+
+[Requirements traceability](Requirements_Traceability.md) is the checklist
+for assignment coverage. Preserve runnable CWE-862/CWE-89 variants with
+revision-linked output (the current historical snapshots have discrepancies).
+Complete the composition evidence and CI gates/
+trigger evidence above, confirm the three chosen entries against the course
+catalogue, and write the 2,000–2,500-word report with code/commit/test references.
+Review [AI_Use.md](AI_Use.md) personally and preserve full Git history.
+
+TLS, key rotation/revocation, separate OS identities, monitoring, backups,
+and production analysis quality are discussion items, not implemented features.
