@@ -7,6 +7,7 @@ import sys
 import tempfile
 import time
 import unittest
+from urllib.parse import quote
 from uuid import uuid4
 import jwt
 import requests
@@ -199,6 +200,33 @@ class FlowTests(unittest.TestCase):
         data["storage_token"]=self.service_token("C","create",identifier)
         response=requests.post(self.urls["B"]+"/internal/analyze",headers={"Authorization":"Bearer "+self.service_token("B","execute",identifier)},json=data,timeout=5)
         self.assertEqual(response.status_code,413)
+
+    def test_sql_injection_via_api_does_not_return_a_record(self):
+        # Use Alice's ordinary login token, not a test-signed service token.
+        # Target her own record so this does not rely on the CWE-862 flaw.
+        document = self.create()
+        missing_id = str(uuid4())
+        base = self.urls["A"] + "/analyses/"
+        normal = requests.get(base + document["id"], headers=self.headers(), timeout=5)
+        self.assertEqual(normal.status_code, 200, normal.text)
+        missing = requests.get(base + missing_id, headers=self.headers(), timeout=5)
+        self.assertEqual(missing.status_code, 404, missing.text)
+
+        injected_id = f"{missing_id}' OR id='{document['id']}' -- "
+        url = base + quote(injected_id, safe="")
+        unauthenticated = requests.get(url, timeout=5)
+        self.assertEqual(unauthenticated.status_code, 401, unauthenticated.text)
+        response = requests.get(url, headers=self.headers(), timeout=5)
+
+        # If injection succeeds, verify it selected this exact test record.
+        if response.status_code == 200:
+            self.assertEqual(response.json()["id"], document["id"])
+            self.assertEqual(response.json()["owner"], document["owner"])
+        self.assertEqual(
+            response.status_code, 400,
+            f"requested_id={injected_id!r}; response={response.text}",
+        )
+        self.assertNotIn("id", response.json())
 
     def test_forged_token(self):
         parts=self.tokens["alice"].split(".")
