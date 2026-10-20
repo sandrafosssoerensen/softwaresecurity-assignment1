@@ -20,7 +20,7 @@ git show 8e1b610:docs/SSDLC_Plan.md
 Component A checks users' identities and coordinates requests. Component B checks and processes
 an alert using the installed helper package. Component C stores analyses and checks
 who may access them. They run as separate programs and communicate through
-HTTP. Creation uses component A → component B → component C. Listing, reading, and deletion use component A → component C.
+HTTP. Creation uses Component A, Component B, and Component C in sequence. Listing, reading, and deletion use Component A and Component C.
 Component A and component C have separate database files.
 
 Setup creates alice and bob as ordinary users and admin as administrator.
@@ -43,10 +43,10 @@ example, “all required authorization tests must pass” is a testing gate.
 |---|---|---|
 | Requirements | Define operations, data to protect, service boundaries, permissions, threats, and controls before coding. | The original plan/design were committed first. [Design](Design.md) gives the current explanation. |
 | Implementation/build | Build three services, install the helper, make setup repeatable, and reject unapproved packages or files. | Services and helper work. The new dependency-approval stage checks installed names and exact versions before application tests. |
-| Testing | Use fresh test data, check allowed/denied requests, demonstrate flaws, and repeat tests after fixes. Required failures must stop release. | Local corrected runs pass 16 tests including six gate tests. The vulnerable application still fails 3 HTTP tests and 1 SQL test. Tests use separate allocated ports, and Jenkins checks each suite's exit code. |
+| Testing | Use fresh test data, check allowed/denied requests, demonstrate flaws, and repeat tests after fixes. Required failures must stop release. | Local corrected runs pass 17 tests including six gate tests, one direct SQL test, and ten HTTP tests. The vulnerable application still fails four HTTP tests and one direct SQL test. Tests use separate allocated ports, and Jenkins checks each suite's exit code. |
 | Release/deploy/operation | Review the report/evidence and explain what production operation would need. | Production needs are documented. The final report and handover checks remain. No production deployment was performed. |
 
-## Asset → threat → control → activity → evidence → gate
+## Asset, threat, control, activity, evidence, and gate
 
 Read this chain as: what needs protection, what could happen, how to prevent
 it, what work to do, how to check the result, and whether to allow release.

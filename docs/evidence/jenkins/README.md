@@ -45,10 +45,13 @@ future exports.
   body. Component C stores owner `2` and returns 201. Bob's read returns 200.
 
 [The vulnerable SQL report](vulnerable-version/build-4/test_store_sql.txt)
-shows the injected analysis ID returning the test record.
-[The fixed HTTP](fixed-version/build-4/test_flow.txt) and
-[fixed SQL](fixed-version/build-4/test_store_sql.txt) reports show all ten
-tests passing.
+shows the injected analysis ID returning the test record. This historical
+archive predates the newer HTTP SQL regression. The current local report in
+`../local-ci-fixes/` records that additional API-level check.
+[The fixed HTTP](fixed-version/build-4/test_flow.txt) archive contains the
+older nine-test HTTP suite, while the fixed SQL report contains one passing
+test. The current ten-test fixed run is in
+[the local evidence folder](../local-ci-fixes/).
 
 [The vulnerable Bandit report](vulnerable-version/build-4/bandit.txt)
 flags string-built SQL as B608. This warning is absent from

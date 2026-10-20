@@ -32,9 +32,11 @@ proofreading.
 
 The repository owner ran commands, tests, security experiments, and Jenkins
 jobs, configured GitHub/Jenkins, managed commits, and supplied console logs
-and reports. The saved fixed reports contain nine passing HTTP tests and
-one passing SQL test. The newer vulnerable reports show the four expected
-test failures across those two suites.
+and reports. The historical saved Jenkins reports contain nine passing HTTP
+tests and one passing direct SQL test. The current local evidence contains
+ten passing HTTP tests and one passing direct SQL test on the corrected
+branch. The newer vulnerable local run shows four HTTP failures and one
+direct SQL failure.
 
 [Verification](Verification.md) contains the test results and known limitations.
 

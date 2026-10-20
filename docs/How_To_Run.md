@@ -317,7 +317,7 @@ The corrected version should report:
 ```text
 Ran 6 tests ... OK
 Ran 1 test ... OK
-Ran 9 tests ... OK
+Ran 10 tests ... OK
 ```
 
 ### 6.1 Compare the vulnerable and fixed branches
@@ -347,6 +347,9 @@ git rev-parse HEAD
 
 This branch is expected to fail security tests. The failures demonstrate the
 four planted vulnerabilities and must not be presented as a secure release.
+The HTTP suite has four expected failures, including the SQL-injection request
+sent through the public API. The direct SQL test also fails because the unsafe
+query returns Alice's record for the injected ID.
 
 Run the corrected version:
 
@@ -358,7 +361,9 @@ git rev-parse HEAD
 .\.venv\Scripts\python.exe -m bandit -r app -f screen --exit-zero
 ```
 
-This branch is expected to report one SQL test and nine HTTP tests passing.
+This branch is expected to report one direct SQL test and ten HTTP tests
+passing. The HTTP SQL-injection request receives 400 before it reaches the
+query. B608 should be absent.
 The final working branch is `assignment-work`. Switch back to it after the
 comparison:
 
@@ -382,11 +387,13 @@ primary evidence source:
 |---|---|---|
 | CWE-20 input size | Oversized alert accepted with 201. | Size test passes, expecting 413. |
 | CWE-862 ownership | Bob reads Alice's result with 200. | Bob receives 404. Owner/admin controls pass. |
-| CWE-89 SQL | Injected ID returns the test record. | Direct SQL test passes with no returned record. |
+| CWE-89 SQL | The HTTP injection request returns Alice's selected record, and the direct SQL test also returns a record. | The HTTP route rejects the malformed ID with 400, and the direct SQL test treats the payload as data. |
 | Composition/CWE-807 | Token permitting creation for Alice is used to store owner 2 (Bob). Bob reads with 200. | Request owner field is rejected with 400. Later read is 404. |
 
-The saved fixed run passes nine HTTP tests and one SQL test. The saved
-vulnerable run has three HTTP failures and one SQL failure. Bandit detects
+The current local fixed run passes ten HTTP tests and one direct SQL test. The
+current local vulnerable run has four HTTP failures and one SQL failure. The
+older Jenkins archive contains nine HTTP tests because it predates the new API
+SQL test. Bandit detects
 the unsafe SQL construction (B608). Both scans also warn about `Bearer`
 (B105). That warning is a false positive: the word names the token scheme,
 not a secret password.

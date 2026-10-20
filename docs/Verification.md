@@ -21,9 +21,10 @@ Run from the repository root, one command after the other:
 ```
 
 [Fixed SQL output](evidence/jenkins/fixed-version/build-4/test_store_sql.txt)
-shows one passing test. [Fixed HTTP output](evidence/jenkins/fixed-version/build-4/test_flow.txt)
-shows nine. Older logs have eight HTTP tests because the test for untrusted
-ownership was added later.
+shows one passing test. The current local fixed output shows ten HTTP tests.
+The older Jenkins HTTP archive shows nine because the API SQL regression was
+added after that archive was created. Older logs have eight HTTP tests because
+the test for untrusted ownership was added later.
 
 | Test | What the passing result shows |
 |---|---|
@@ -51,13 +52,15 @@ results. Older per-CWE logs are also kept for reference.
 |---|---|---|---|
 | CWE-20: missing size check | Oversized input is accepted: 201 instead of 413. | The test passes by receiving 413. | [Vulnerable HTTP](evidence/jenkins/vulnerable-version/build-4/test_flow.txt), [fixed HTTP](evidence/jenkins/fixed-version/build-4/test_flow.txt) |
 | CWE-862: missing owner check | Bob reads Alice's result: 200 instead of 404. | Bob is denied, while Alice and admin can read. | Same HTTP reports |
-| CWE-89: SQL built from input text | The injected ID returns the record `known-analysis`. | The same input returns no record. | [Vulnerable SQL](evidence/jenkins/vulnerable-version/build-4/test_store_sql.txt), [fixed SQL](evidence/jenkins/fixed-version/build-4/test_store_sql.txt) |
+| CWE-89: SQL built from input text | The direct SQL test returns `known-analysis`, and the HTTP test returns Alice's selected record for the injected ID. | The direct SQL test returns no record, and the HTTP route rejects the malformed ID with 400. | [Vulnerable SQL](evidence/jenkins/vulnerable-version/build-4/test_store_sql.txt), [fixed SQL](evidence/jenkins/fixed-version/build-4/test_store_sql.txt), [current local HTTP](evidence/local-ci-fixes/vulnerable-test_flow-current.txt) |
 | Composition/CWE-807: request body chooses owner | A token permitting creation for Alice is used with Bob as body owner. Component C returns 201 and owner `2`. Bob reads with 200. | Component C rejects the owner field with 400, then returns 404 for the read. Normal create/read still works. | Same HTTP reports |
 
 The size test shows acceptance of large input. It does not measure CPU or
-memory exhaustion. The SQL test calls the database function directly.
-the HTTP route checks the ID format first. It does not prove SQL injection
-through the public HTTP API.
+memory exhaustion. CWE-89 now has both a direct storage regression and an
+HTTP regression. The vulnerable GET experiment skips the UUID-format check so
+the payload reaches the unsafe query. The corrected route rejects it before
+the query, and the HTTP test uses Alice's own record rather than another
+user's record.
 
 The composition test creates tokens with the lab private key to simulate
 component B's legitimate permission to store an analysis for Alice. It does not show
@@ -72,8 +75,8 @@ composition flaw enabled would give stronger evidence of its separate effect.
 | Work | Reference |
 |---|---|
 | Original plan/design, followed by first implementation | `8e1b610`, then `7f04cee`. |
-| Corrected application used for comparison | `e3378c6`. `a8881eb` later adds and reorganizes evidence. |
-| Runnable version with all four flaws | `5e58e8f`. |
+| Corrected application used for comparison | Current `fixed-version` commit `1ccd085`. Historical Jenkins evidence used `e3378c6`. |
+| Runnable version with all four flaws | Current `vulnerable-version` commit `a1928f4`. Historical Jenkins evidence used `5e58e8f`. |
 | Jenkins change to find Python through PATH | `d67a0c2`. |
 | Older individual experiments | `37e5f96` / `dd2643a` (CWE-20), `185aada` / `3e3f7f6` (CWE-862), `37646f2` / `a7039b4` (CWE-89), `96fb053` / `718aee3` (composition). |
 
@@ -144,9 +147,9 @@ component B, and component A start in that order on separate loopback
 ports allocated by the operating system. Each server publishes its port
 only after binding, and the suite checks its service identity and health.
 
-Two local HTTP suites ran concurrently and both passed all nine tests.
+Two local HTTP suites ran concurrently and both passed all ten tests.
 A separate concurrent fixed/vulnerable comparison preserved the intended
-differences: fixed HTTP passed, vulnerable HTTP had three security failures.
+differences: fixed HTTP passed, vulnerable HTTP had four security failures.
 `disableConcurrentBuilds()` remains useful within a branch, but is no
 longer relied on to separate ports across branches.
 
@@ -196,7 +199,7 @@ every push caused a separate build.
 - [x] Original four-phase plan committed before the implementation commit.
 - [x] Three separate services, installed helper, user roles, and functional/permission tests.
 - [x] Runnable vulnerable version and saved results showing all four intended failures.
-- [x] Fixed comparison passes nine HTTP tests and one SQL test.
+- [x] Fixed comparison passes ten HTTP tests and one direct SQL test.
 - [x] Source/package reports and explanation of the false-positive warning.
 - [x] Build #10 finds Python through the Jenkins service PATH.
 - [x] Separate build commands and check every test-suite exit code in source.

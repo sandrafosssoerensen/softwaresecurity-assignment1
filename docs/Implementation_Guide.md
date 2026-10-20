@@ -183,7 +183,7 @@ Run:
 .\.venv\Scripts\python.exe tests\test_flow.py
 ```
 
-The saved corrected version passes one SQL test and nine HTTP tests.
+The corrected version passes one direct SQL test and ten HTTP tests.
 [The coverage table](Verification.md#test-results) says what
 each checks. Tests of allowed requests are important alongside attack tests.
 
@@ -204,13 +204,16 @@ The saved results show:
 
 - Missing size check: large input accepted, then rejected after correction.
 - Missing owner check: Bob reads Alice's result, then is denied after correction.
-- SQL built from input: injected ID returns a record, then no record with parameters.
+- SQL built from input: the HTTP experiment returns Alice's record on the
+  vulnerable branch, while the corrected route rejects the injected ID. The
+  direct SQL regression returns no record after parameterization.
 - Composition flaw: a token permitting creation for Alice is used to store
   the result for Bob. Corrected component C rejects the body owner.
 
-Use `5e58e8f` for the combined vulnerable version and `e3378c6` for
-the corrected application. Some older attempts cannot repeat their saved
-results unchanged. The experiment guide explains why.
+Use the `vulnerable-version` branch for the combined vulnerable version and
+the `fixed-version` branch for the corrected application. The current
+comparison commits are `a1928f4` and `1ccd085`. Some older attempts cannot
+repeat their saved results unchanged. The experiment guide explains why.
 
 The combined version removes both owner-on-write and owner-on-read protections.
 Its wrong-owner response proves the incorrect write, but the later read does

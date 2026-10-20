@@ -3,14 +3,16 @@
 These are local results, not a new Jenkins build. The older Jenkins
 comparison reports remain unchanged in the neighbouring `jenkins/` folder.
 
-| Branch | Local CI-fix commit |
+| Branch | Latest local comparison commit |
 |---|---|
-| `assignment-work` | `7dd7058` |
-| `fixed-version` | `b5fe1f7` |
-| `vulnerable-version` | `5165054` |
+| `assignment-work` | `04d8a54` |
+| `fixed-version` | `1ccd085` |
+| `vulnerable-version` | `a1928f4` |
 
-The test runs used these file contents before the commits were created.
-No application vulnerability was added or removed by these CI commits.
+The test runs used these branch contents after the comparison commits above.
+The CI-fix commits listed in the earlier version of this file remain their
+own historical references. The new comparison commits add the HTTP CWE-89
+regression and the vulnerable branch's controlled HTTP reachability change.
 
 ## Changes checked
 
@@ -29,9 +31,9 @@ No application vulnerability was added or removed by these CI commits.
 | Existing development environment with extra `pypdf` | Rejected as unapproved, exit 1 |
 | Dependency-gate unit tests | 6 pass |
 | Corrected SQL test | 1 pass |
-| Corrected HTTP suite | 9 pass |
-| Two corrected HTTP suites running concurrently | Both pass all 9 tests |
-| Fixed and vulnerable HTTP suites running concurrently | Fixed passes all 9. Vulnerable has the expected 3 security failures |
+| Corrected HTTP suite | 10 pass |
+| Two corrected HTTP suites running concurrently | Both pass all 10 tests |
+| Fixed and vulnerable HTTP suites running concurrently | Fixed passes all 10. Vulnerable has the expected 4 security failures |
 | Vulnerable SQL test | Expected failure because injected input returns a record |
 | `pip check` in the clean environment | No broken requirements |
 
@@ -44,6 +46,12 @@ It is simply not an approved dependency of this application or CI environment.
 [vulnerable HTTP output](vulnerable-test_flow.txt), and
 [SQL comparison output](sql-comparison.txt) record the local branch comparison.
 The SQL file contains the fixed run first and the vulnerable run second.
+
+The current standalone outputs are [fixed HTTP](fixed-test_flow-current.txt),
+[vulnerable HTTP](vulnerable-test_flow-current.txt), [fixed SQL](fixed-test_store_sql-current.txt),
+and [vulnerable SQL](vulnerable-test_store_sql-current.txt). The current HTTP
+test includes the CWE-89 request through the public API. The older output files
+remain as historical evidence from before that test was added.
 
 ## Repeating the checks
 

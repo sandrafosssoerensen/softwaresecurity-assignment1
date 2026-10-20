@@ -40,8 +40,8 @@ Responses return through the components that handled the request.
 | Branch | Purpose | Saved result |
 |---|---|---|
 | `assignment-work` | Corrected application and current documents | Jenkins build #10 succeeded at commit `d67a0c2` after Jenkins could find Python through PATH. |
-| `fixed-version` | Corrected version used for comparison | Nine HTTP tests and one SQL test pass. |
-| `vulnerable-version` | Version with four deliberately enabled security flaws | Three HTTP tests and one SQL test fail where they check the broken protections. |
+| `fixed-version` | Corrected version used for comparison | Ten HTTP tests and one direct SQL test pass. |
+| `vulnerable-version` | Version with four deliberately enabled security flaws | Four HTTP tests and one direct SQL test fail where they check the broken protections. |
 
 The [evidence index](docs/evidence/jenkins/README.md) links the saved reports.
 Bandit finds unsafe SQL construction (B608/CWE-89) in the vulnerable version.
@@ -68,10 +68,14 @@ keep the protections below active.
 | CWE-89 — SQL injection | An ID inserted directly into an SQL query can change what the query returns. | Pass the ID as an SQL parameter instead of inserting it into query text. |
 | Composition flaw, CWE-807 — trusting a request's owner field | Component C accepts an owner chosen in the body even though component A's signed token names the authorized user. | Reject the extra owner field and store the user ID from the verified token. |
 
-The SQL experiment calls the storage function directly. It does not prove
-injection through the public HTTP API. The combined vulnerable version also
-disables read ownership checks, so the composition test's wrong-owner write
-is the clearest evidence of that flaw.
+The SQL experiment has two complementary checks. The direct SQL test isolates
+the storage query. The HTTP test sends an injected analysis ID through
+Component A and Component C. On the vulnerable branch, the GET experiment
+allows that input to reach the unsafe query. On the corrected branches, the
+ID format check rejects it before the query runs. The HTTP test uses Alice's
+own record, so it does not depend on the separate missing ownership check.
+The combined vulnerable version also disables read ownership checks, so the
+composition test's wrong-owner write is the clearest evidence of that flaw.
 See the [experiment guide](docs/Vulnerability_Experiments_Guide.md) for inputs,
 code changes, and the corresponding test results.
 
@@ -153,8 +157,8 @@ data. Manually starting the services first is unnecessary.
 .\.venv\Scripts\python.exe tests\test_flow.py
 ```
 
-The corrected version should pass six dependency-gate tests, one SQL test,
-and nine HTTP tests. The HTTP suite creates temporary accounts, keys, and
+The corrected version should pass six dependency-gate tests, one direct SQL
+test, and ten HTTP tests. The HTTP suite creates temporary accounts, keys, and
 databases. Each component binds an unused loopback port allocated by the
 operating system. Separate runs can therefore execute at the same time.
 
@@ -218,7 +222,7 @@ repository root/
 │   └── test_store_sql.py    SQL-injection regression test
 ├── examples/request.json    Example alert request
 ├── docs/                    Guides, design, SSDLC plan, and requirement checklist
-│   └── evidence/jenkins/    Saved fixed and vulnerable build reports
+│   └── evidence/            Saved fixed and vulnerable build reports
 ├── manage.py                Django command entry point
 ├── requirements.txt         Application dependencies
 ├── requirements-build.txt   Build dependencies

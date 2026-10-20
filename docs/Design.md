@@ -244,16 +244,23 @@ The tests are in [test_flow.py](../tests/test_flow.py) and
 
 ## Experiments and scope
 
-The runnable `vulnerable-version` at `5e58e8f` deliberately enables
-CWE-20, CWE-862, CWE-89, and the additional composition flaw, CWE-807.
-A CWE number names a category of software weakness. Saved tests show the
-four expected failures. The fixed comparison passes all ten tests.
+The runnable `vulnerable-version` deliberately enables CWE-20, CWE-862,
+CWE-89, and the additional composition flaw, CWE-807. A CWE number names a
+category of software weakness. Its HTTP suite shows four expected failures,
+and its direct SQL regression also fails. The fixed comparison passes all ten
+HTTP tests and the direct SQL regression.
 The [experiment guide](Vulnerability_Experiments_Guide.md) explains each one.
 
 The composition flaw occurs when component C trusts a body field saying who owns the
 result, even though component A's signed token already identifies the authorized user.
 The test simulates component B having valid permission to create Alice's result and
 then trying to store it for Bob.
+
+The CWE-89 HTTP experiment sends an injected analysis ID through component A.
+The vulnerable branch omits the UUID-format check for GET requests so the
+payload reaches its deliberately unsafe query. The corrected branches keep
+the format check and use a parameterized query. The test requests Alice's own
+record, which isolates SQL behavior from the separate ownership experiment.
 
 The vulnerable comparison also disables read ownership checks. It shows
 the wrong owner being stored, but Bob's later successful read could also
@@ -276,8 +283,6 @@ Before offering the application as a production service, it would need:
 - Request-rate limits, capacity controls, and a decision about retries.
   Repeating a request after a timeout should not accidentally duplicate work.
 - Audit logs, monitoring, backups, data-retention rules, and recovery tests.
-- Package approval checks and Jenkins steps that reliably stop on every
-  required failure.
 - Evaluation of a real processing model if the development stub is replaced.
 
 These production features are not implemented.
