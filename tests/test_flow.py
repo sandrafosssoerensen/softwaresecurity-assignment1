@@ -25,39 +25,54 @@ class FlowTests(unittest.TestCase):
         cls.logs = []
         cls.processes = []
 
-        seed_env = os.environ.copy()
-        seed_env.update(SERVICE="A", DATA_DIR=str(cls.runtime / "A"), LAB_RUNTIME_DIR=str(cls.runtime))
-        subprocess.run([sys.executable, "scripts/setup_lab.py"], cwd=ROOT, env=seed_env,
-                       check=True, stdout=subprocess.DEVNULL)
-        
-        cls.urls = {s: "http://127.0.0.1:" + str(18000+i) for i, s in enumerate("ABC")}
+        cls.urls = {}
 
         try:
-            for i, service in enumerate("ABC"):
+            seed_env = os.environ.copy()
+            seed_env.update(SERVICE="A", DATA_DIR=str(cls.runtime / "A"), LAB_RUNTIME_DIR=str(cls.runtime))
+            subprocess.run([sys.executable, "scripts/setup_lab.py"], cwd=ROOT, env=seed_env,
+                           check=True, stdout=subprocess.DEVNULL)
+
+            # Start downstream services first. Each binds port 0 and publishes
+            # its actual OS-allocated port, so branch jobs cannot share ports.
+            for service in "CBA":
                 env = os.environ.copy()
+                for key in ("PRIVATE_KEY_PATH", "B_URL", "C_URL"):
+                    env.pop(key, None)
                 env.update(SERVICE=service, DATA_DIR=str(cls.runtime / service),
-                           PUBLIC_KEY_PATH=str(cls.runtime / "keys/public.pem"),
-                           B_URL=cls.urls["B"], C_URL=cls.urls["C"])
+                           PUBLIC_KEY_PATH=str(cls.runtime / "keys/public.pem"))
+                env.update({name + "_URL": url for name, url in cls.urls.items()})
                 
                 if service == "A":
                     env["PRIVATE_KEY_PATH"] = str(cls.runtime / "keys/private.pem")
                 log = (cls.runtime / (service + ".log")).open("w")
                 cls.logs.append(log)
-                cls.processes.append(subprocess.Popen([sys.executable, "manage.py", "runserver",
-                    "127.0.0.1:"+str(18000+i), "--noreload"], cwd=ROOT, env=env,
-                    stdout=log, stderr=log))
-                
-            deadline = time.monotonic()+20
-
-            for url in cls.urls.values():
+                ready = cls.runtime / (service + "-ready.json")
+                process = subprocess.Popen([sys.executable, "scripts/serve_test.py", str(ready)],
+                                           cwd=ROOT, env=env, stdout=log, stderr=log)
+                cls.processes.append(process)
+                deadline = time.monotonic() + 30
+                while not ready.exists():
+                    if process.poll() is not None or time.monotonic() > deadline:
+                        details = (cls.runtime / (service + ".log")).read_text(errors="replace")
+                        raise RuntimeError(f"Component {service} startup failed: {details[-2000:]}")
+                    time.sleep(0.1)
+                address = json.loads(ready.read_text(encoding="utf-8"))
+                if address["service"] != service:
+                    raise RuntimeError(f"Unexpected readiness identity for component {service}")
+                url = "http://127.0.0.1:" + str(address["port"])
+                cls.urls[service] = url
                 while True:
+                    if process.poll() is not None:
+                        raise RuntimeError(f"Component {service} exited before its health check")
                     try:
-                        if requests.get(url+"/health", timeout=1).status_code == 200:
+                        response = requests.get(url + "/health", timeout=1)
+                        if response.status_code == 200 and response.json().get("service") == service:
                             break
                     except requests.RequestException:
                         pass
                     if time.monotonic() > deadline:
-                        raise RuntimeError("Server startup failed")
+                        raise RuntimeError(f"Component {service} health check failed")
                     time.sleep(0.1)
 
             cls.tokens = {}
@@ -75,7 +90,8 @@ class FlowTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         for process in cls.processes:
-            process.terminate()
+            if process.poll() is None:
+                process.terminate()
 
         for process in cls.processes:
             try:

@@ -1,6 +1,9 @@
 __pycache__/
 *.pyc
 .venv/
+.jenkins-venv/
+reports/
+.pip-audit-cache/
 .runtime/
 artifacts/
 helper/dist/
