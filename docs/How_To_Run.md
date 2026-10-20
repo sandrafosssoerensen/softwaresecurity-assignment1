@@ -1,21 +1,21 @@
 # How to run and understand the application
 
-This guide explains how to install, start, use, test, and verify the secure
-baseline of the Software Security assignment. Recorded results and unresolved
-submission items are listed in [Verification](Verification.md); this guide
-is not a declaration that the complete assignment is finished.
+This guide shows how to install and use the corrected application, run its
+tests, compare versions, and access Jenkins. It also includes an optional
+ZAP scan. [Verification](Verification.md) lists saved results and unfinished
+work. [Terminology](Terminology.md) explains technical words used here.
 
-The application is a small IDS alert-analysis service with three separate
-Django processes:
+The application processes test alerts from an intrusion detection system
+(IDS). Three Django services run as separate programs:
 
 ```text
-Client → A: API/authentication → B: processing → C: storage/authorization
+Client → component A: login and requests → component B: processing → component C: storage and access checks
                                       ↓              ↓
                               alert-helper       SQLite database
 ```
 
-The services communicate over HTTP. The database is storage, not one of the
-three application components.
+The services send HTTP requests to each other. The database stores records.
+it does not count as one of the three application services.
 
 ## 1. Prerequisites
 
@@ -24,7 +24,7 @@ The local setup uses:
 - Windows PowerShell
 - Python 3.12
 - Git
-- Internet access for installing the pinned Python dependencies
+- Internet access to download the Python packages listed in the requirements
 
 Use the directory containing `manage.py`, `Jenkinsfile`, and
 `requirements.txt`. In the author's existing extraction it is
@@ -47,30 +47,32 @@ git status --short --branch
 ```
 
 Use the corrected `assignment-work` branch. Save/commit your own work before
-switching branches. The commands below use the explicit virtual-environment
-Python path, so activation is unnecessary.
+switching branches. Each command below names the Python executable inside the virtual environment
+(a separate package environment for this project), so you do not need to
+activate it first.
 
 ## 2. Install the project
 
 Create a virtual environment and install the application and build
-dependencies:
+dependencies. If the Windows `py` launcher is unavailable, first confirm
+`python --version` is 3.12 and use `python -m venv .venv` instead:
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-build.txt
 ```
 
-Build and install the project-owned external package. It is installed as a
-wheel and is not copied into the application source code:
+Build and install your own helper package. A wheel is an installable Python
+package file ending in `.whl`. This keeps the helper as an installed package:
 
 ```powershell
 .\.venv\Scripts\python.exe -m build --wheel --no-isolation helper
 .\.venv\Scripts\python.exe -m pip install --no-deps helper\dist\alert_helper-0.1.0-py3-none-any.whl
 ```
 
-The package is called `alert-helper`. Component B imports it as
-`alert_helper` to select and validate alert fields and to validate model
-results. A and C also import the package validators through the shared views.
+The package name is `alert-helper`. Python code imports it as `alert_helper`.
+Component B uses its functions to select alert fields and check the alert and result.
+Component A and component C also use these checks through the shared request-handling code.
 
 Check that the package is installed:
 
@@ -86,14 +88,14 @@ Run:
 .\.venv\Scripts\python.exe scripts\setup_lab.py
 ```
 
-This creates local RSA keys, the authentication database, and three synthetic
-lab accounts:
+This creates the keys used to sign/check tokens, component A's user database, and
+three test accounts:
 
 | User | Role | Purpose |
 |---|---|---|
-| `alice` | ordinary user | Own-resource tests |
-| `bob` | ordinary user | Cross-user authorization tests |
-| `admin` | administrator | Administrator-only actions |
+| `alice` | ordinary user | Creates and reads her own analyses. |
+| `bob` | ordinary user | Checks that a second user cannot read Alice's analyses. |
+| `admin` | administrator | Reads all analyses and can delete them. |
 
 The lab password is:
 
@@ -102,32 +104,33 @@ Lab-only-Password-123!
 ```
 
 These are teaching credentials only. The generated keys and runtime databases
-remain under `.runtime/` and are ignored by Git. C creates its separate
+remain under `.runtime/` and are ignored by Git. Component C creates its separate
 analysis database when it first accesses storage. Repeating setup resets
 the three lab passwords without erasing stored analyses.
 
-A is configured with the private-key path. Local A/B/C processes still run
-under the same OS user, so this is application-level separation rather than
-filesystem isolation. These commands assume no previously set `DATA_DIR`,
-`LAB_RUNTIME_DIR`, `B_URL`, or `C_URL` overrides.
+Only component A is given the private-key path in its normal launch settings. However,
+all three programs run under the same Windows account, which may let them
+read the same files. They have different application permissions, but their
+file access is not isolated by Windows. These examples assume you have not
+set custom `DATA_DIR`, `LAB_RUNTIME_DIR`, `B_URL`, or `C_URL` values.
 
 ## 4. Start the three components
 
 Open three PowerShell terminals in the project root.
 
-Terminal 1 — Application API A:
+Terminal 1 — Component A — application API:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\serve.py A
 ```
 
-Terminal 2 — Processing service B:
+Terminal 2 — Component B — processing service:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\serve.py B
 ```
 
-Terminal 3 — Resource service C:
+Terminal 3 — Component C — resource service:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\serve.py C
@@ -137,9 +140,9 @@ The services listen on:
 
 | Component | Address | Responsibility |
 |---|---|---|
-| A | `http://127.0.0.1:8000` | Login and public API coordination |
-| B | `http://127.0.0.1:8001` | Alert validation and processing |
-| C | `http://127.0.0.1:8002` | Protected analysis storage and authorization |
+| Component A | `http://127.0.0.1:8000` | Checks logins and sends user requests to component B and component C. |
+| Component B | `http://127.0.0.1:8001` | Checks alerts and produces results. |
+| Component C | `http://127.0.0.1:8002` | Stores results and checks who may access them. |
 
 Check that each process is running:
 
@@ -149,8 +152,9 @@ Invoke-RestMethod http://127.0.0.1:8001/health
 Invoke-RestMethod http://127.0.0.1:8002/health
 ```
 
-Only A is intended to be used by the client. B and C expose internal
-endpoints used by the other services.
+Send user requests to component A. Component B and component C have routes intended for requests from other
+services. The word `internal` in those routes does not itself protect them.
+they still need token and permission checks.
 
 ## 5. Use the application
 
@@ -171,10 +175,12 @@ $login = Invoke-RestMethod `
 $token = $login.access_token
 ```
 
-A receives the credentials and returns a short-lived RS256 JWT. The token
-contains the identity, role, audience, scope, expiration, and token ID.
-It expires after 900 seconds; log in again if a later request returns 401.
-Do not publish live bearer tokens with your evidence.
+Component A checks the username/password and returns a signed login token (JWT).
+The token contains the user ID, role, intended service, allowed action,
+expiry time, and a token ID. It is signed using the existing RS256 algorithm.
+It expires after 900 seconds. Log in again if it expires. Do not include
+live tokens in published reports. [Design](Design.md#authentication-and-authority-binding)
+explains the token fields.
 
 ### 5.2 Create an analysis
 
@@ -194,15 +200,16 @@ $analysis.id
 
 The request travels through all three components:
 
-1. A authenticates the caller and creates scoped service tokens.
-2. B verifies its token, validates the alert using `alert-helper`, and creates
-   a deterministic development result.
-3. C verifies the create token, binds ownership to the verified token claim,
-   and stores the result.
-4. The response returns C → B → A → client, with status 201.
+1. Component A checks the user's token and creates two tokens: one permitting component B to
+   process the alert and one permitting component C to store that analysis for the user.
+2. Component B checks the tokens and alert using `alert-helper`, then produces a simple
+   development result.
+3. Component B sends the result to component C together with component A's existing storage token.
+4. Component C checks that token and stores the owner from its signed user ID.
+5. The result returns component C → component B → component A → client with status 201 (created).
 
-The result identifies its model as `development-stub`; it is not a live LLM
-analysis. [Design](Design.md) explains the token checks and full data flow.
+The model is labelled `development-stub`: a fixed-format summary used in
+place of a real AI model. [Design](Design.md) explains the full data flow.
 
 ### 5.3 List and read analyses
 
@@ -240,7 +247,7 @@ try {
 ```
 
 Expected status: 404. In PowerShell, `Invoke-RestMethod` raises an error for
-non-success HTTP responses; here the catch prints the denial's status.
+non-success HTTP responses. Here the catch prints the denial's status.
 
 ### 5.5 Delete an analysis
 
@@ -279,91 +286,237 @@ same ID returns 404, including for Alice.
 
 ## 6. Run the tests
 
-The HTTP suite starts three fresh Django processes on ports 18000–18002,
-creates temporary keys/databases, seeds the users, and cleans up after the run.
-Keep those ports free; manually running A/B/C on 8000–8002 is not needed for
-testing. The separate SQL test uses a temporary database and no HTTP servers.
+The HTTP tests start three new Django processes, create temporary
+keys/databases and known users, and clean up afterwards. Each process
+binds its own unused loopback port allocated by the operating system.
+The processes report their addresses before requests begin, so separate
+branch jobs do not share test listeners. Manually running component A,
+component B, and component C on 8000–8002 is not needed for testing.
+The SQL test uses a temporary database and no HTTP servers.
 
-Run the focused SQL-injection regression test:
+Run the dependency-gate tests as well:
+
+```powershell
+.\.venv\Scripts\python.exe tests\test_dependency_gate.py
+```
+
+Run the SQL test, which checks that the injection bug remains fixed:
 
 ```powershell
 .\.venv\Scripts\python.exe tests\test_store_sql.py
 ```
 
-Run the HTTP integration and authorization tests:
+Run the HTTP tests, which check the services working together and their permission rules:
 
 ```powershell
 .\.venv\Scripts\python.exe tests\test_flow.py
 ```
 
-The secure baseline should report:
+The corrected version should report:
 
 ```text
+Ran 6 tests ... OK
 Ran 1 test ... OK
 Ran 9 tests ... OK
 ```
 
+### 6.1 Compare the vulnerable and fixed branches
+
+The repository contains separate comparison branches. Save or commit local
+changes and stop manually started services before switching code. Install
+Bandit once in the local venv if it is not already present:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install bandit==1.9.4
+```
+
+The commands below run the same tests and scan the same source folder as
+Jenkins. This repository has no `run.bat --scan` command. Run commands one
+after the other, save your changes before switching, and record the commit
+shown by `git rev-parse HEAD`.
+
+Run the version with the four deliberately enabled flaws:
+
+```powershell
+git switch vulnerable-version
+git rev-parse HEAD
+.\.venv\Scripts\python.exe tests\test_store_sql.py
+.\.venv\Scripts\python.exe tests\test_flow.py
+.\.venv\Scripts\python.exe -m bandit -r app -f screen --exit-zero
+```
+
+This branch is expected to fail security tests. The failures demonstrate the
+four planted vulnerabilities and must not be presented as a secure release.
+
+Run the corrected version:
+
+```powershell
+git switch fixed-version
+git rev-parse HEAD
+.\.venv\Scripts\python.exe tests\test_store_sql.py
+.\.venv\Scripts\python.exe tests\test_flow.py
+.\.venv\Scripts\python.exe -m bandit -r app -f screen --exit-zero
+```
+
+This branch is expected to report one SQL test and nine HTTP tests passing.
+The final working branch is `assignment-work`. Switch back to it after the
+comparison:
+
+```powershell
+git switch assignment-work
+```
+
+The expected Jenkins result is red for `vulnerable-version` and green for
+the corrected versions. The saved comparison shows the intended failures.
+The updated Jenkinsfile checks each suite's exit code, including the SQL
+suite even if the later HTTP suite passes. Verify this in a new Jenkins run.
+See [Verification](Verification.md#failure-propagation).
+`--exit-zero` saves/displays findings without making the scan command fail.
+
 ## 7. Vulnerability evidence
 
-The current branch keeps size validation, owner/admin checks, parameterized
-SQL, and signed ownership binding active. Existing files in
-[evidence/](evidence/) have different levels of completeness:
+Use the new [Jenkins comparison index](evidence/jenkins/README.md) as the
+primary evidence source:
 
-| Experiment | Files | Interpretation |
+| Control | Vulnerable result | Fixed result |
 |---|---|---|
-| CWE-20 | `CWE-20-vulnerable.txt`, `CWE-20-corrected.txt` | Oversized-input acceptance and corrected rejection recorded. |
-| CWE-862 | `CWE-862-vulnerable.txt`, `CWE-862-corrected.txt` | Cross-user disclosure and corrected denial recorded. |
-| CWE-89 | `CWE-89-vulnerable.txt`, `CWE-89-corrected.txt` | Direct storage-level injection and parameterized correction recorded. |
-| Composition/CWE-807 | `CWE-807-vulnerable.txt`, `CWE-807-corrected.txt` | Corrected test passes; vulnerable attempt fails during setup, before the intended attack. |
+| CWE-20 input size | Oversized alert accepted with 201. | Size test passes, expecting 413. |
+| CWE-862 ownership | Bob reads Alice's result with 200. | Bob receives 404. Owner/admin controls pass. |
+| CWE-89 SQL | Injected ID returns the test record. | Direct SQL test passes with no returned record. |
+| Composition/CWE-807 | Token permitting creation for Alice is used to store owner 2 (Bob). Bob reads with 200. | Request owner field is rejected with 400. Later read is 404. |
 
-Use the [experiment guide](Vulnerability_Experiments_Guide.md) for reproduction,
-historical CWE-862/CWE-89 snapshot issues, and the remaining composition work.
-Do not enable vulnerable variants during
-the normal application walkthrough.
+The saved fixed run passes nine HTTP tests and one SQL test. The saved
+vulnerable run has three HTTP failures and one SQL failure. Bandit detects
+the unsafe SQL construction (B608). Both scans also warn about `Bearer`
+(B105). That warning is a false positive: the word names the token scheme,
+not a secret password.
+
+Older per-CWE files remain as history, including the unsuccessful initial
+composition attempt. The newer vulnerable version can be run. See the
+[experiment guide](Vulnerability_Experiments_Guide.md) for the setup,
+code fixes, and limits on what each result proves when several flaws are
+active together.
 
 ## 8. Jenkins and CI/CD
 
-The [Jenkinsfile](../Jenkinsfile) defines checkout, fresh Python environment,
-helper build/install, Bandit, pip-audit, a high-severity Bandit gate, both test
-commands, and report archiving. It currently uses Windows batch commands and
-a machine-specific `PYTHON` path; adapt that path to an installed Python 3.12
-accessible to the Jenkins service account on another machine.
+The [Jenkinsfile](../Jenkinsfile) defines the automated steps: download the
+branch, create a Python environment, build/install the helper, check source
+and packages, run tests, and save reports. Bandit checks source code.
+pip-audit checks package versions against known vulnerability reports.
+A gate is a rule deciding whether a failure must stop the build.
 
-The existing local Jenkins UI is at `http://localhost:8080/` while its
-Windows service is running. This URL points to the viewer's own computer; it
-is not a public evidence URL.
+### 8.1 Prepare a Windows Jenkins agent
 
-To review the configured job:
+The Jenkins agent is the computer/process that runs the build commands.
+It needs Git, Python 3.12, and network access to the private repository and
+package download/advisory services. Python must be accessible to the account
+running Jenkins. PATH is the list
+of folders Windows searches for commands. Creating a separate variable
+called `python312` does not add that folder to PATH.
 
-1. Open `software-security-assignment1-multibranch`.
-2. Check that the GitHub source points to the assignment repository and uses
-   a Jenkins-stored credential with the needed private-repository read access.
-3. Check branch/PR discovery and the script path `Jenkinsfile`.
-4. Inspect `assignment-work` builds, their revision and build cause.
-5. Open Console Output and Artifacts for the selected build.
+The Build stage runs `where python` and `python --version`. If those fail,
+correct the service account/system PATH, restart the Jenkins service through
+an administrator terminal, and rerun the build. Keep personal installation
+paths in the agent's configuration rather than hardcoding them in source.
 
-The ordinary job `software-security-assignment1-ci` produced the saved
-[build #4 reports](evidence/jenkins/build-4/). They contain
-`bandit.json`, `bandit.txt`, `pip-audit.json`, `test_flow.txt`, and
-`test_store_sql.txt`.
+```powershell
+Restart-Service jenkins
+```
 
-Periodic multibranch scanning can discover changed branches/PRs while Jenkins
-is running, but can combine multiple pushes. The `githubPush()` declaration
-alone does not configure working webhook delivery. A new push build and a
-PR build still need to be observed and saved to verify the assignment's
-automatic-trigger requirement.
+The working and comparison branches now use the same portable Jenkinsfile
+and test harness. Their application protections still differ as intended.
 
-There are also open implementation issues: Windows batch blocks can mask
-an earlier failed command, and no dependency approval inventory is enforced.
-See [Verification](Verification.md#jenkins-evidence-and-gaps) before claiming
-all release gates work. No service-log or JUnit XML artifacts are currently
-produced/preserved.
+### 8.2 Configure and access the multibranch job
+
+Open `http://localhost:8080/` while your Jenkins service is running. This
+address refers to the viewer's own machine. Log in with the Jenkins account
+created during setup. `initialAdminPassword` is for the first setup unlock.
+it is not the ordinary password after creating the admin account.
+
+For a fresh Jenkins installation, install Pipeline, Git, and GitHub Branch
+Source support and create a **Multibranch Pipeline** job:
+
+1. Add a GitHub source for
+   `https://github.com/sandrafosssoerensen/softwaresecurity-assignment1`.
+2. Select a Jenkins-stored credential with repository read access. For a
+   fine-grained token, select this private repository and grant the relevant
+   contents/metadata and pull-request read permissions. Grant commit-status
+   write only if Jenkins posts statuses.
+3. Enable branch discovery and origin pull-request discovery, use
+   `Jenkinsfile` as script path, save, and scan the repository.
+4. Check that `assignment-work`, `fixed-version`, and
+   `vulnerable-version` are discovered when their remote heads contain a
+   Jenkinsfile. A branch with no Jenkinsfile is skipped.
+5. Open a branch build's Console Output and Artifacts (saved files). Check
+   the commit, why the build started, each stage's result, and the test reports.
+
+The existing job is named `software-security-assignment1-multibranch`.
+Job configuration and stored credentials are external to the repository.
+a clone alone does not create them.
+
+### 8.3 Automatic triggers, gates, and archived output
+
+The current job periodically checks the repository for changes. Push delivery
+also appeared in the assignment-work #9 console. The later manually
+started #10 run succeeded after the PATH correction. A successful automatic
+push run and a pull-request (PR) build still need complete saved evidence.
+
+A webhook is a notification GitHub sends to Jenkins after an event such as
+a push. GitHub must be able to reach Jenkins' `/github-webhook/` route.
+A GitHub-hosted webhook cannot deliver directly
+to your computer's `localhost`. Record the reachable delivery setup and
+successful delivery/build cause used in the demonstration. Keep credentials
+and webhook secrets outside the source/evidence.
+
+The pipeline saves `dependency-approval.json`, `bandit.json`, `bandit.txt`,
+`pip-audit.json`, `test_dependency_gate.txt`, `test_store_sql.txt`, and
+`test_flow.txt` when those steps produce them. Tests use text reports rather
+than JUnit XML. Earlier archives contain only the reports produced then.
+
+The Bandit gate stops only on high-severity findings, so low B105 and medium
+B608 do not stop that stage. The SQL test checks the actual unsafe query
+behavior. Package audit findings, unapproved package names or versions,
+build errors, and any required test failure stop the updated pipeline.
+The approval stage compares the installed inventory against all three
+requirements files and `ci/approved-local.txt`. To reproduce that stage,
+use a fresh environment and include `-r requirements-ci.txt` when installing
+requirements. Your ordinary development environment may contain extra tools
+that correctly fail the approval check.
+See [Verification](Verification.md#jenkins-evidence-and-gaps).
+
+HTTP suites can run concurrently because they allocate separate test ports.
+`disableConcurrentBuilds()` additionally prevents overlap within one branch job.
+
+### 8.4 Optional OWASP ZAP assessment
+
+OWASP ZAP checks a running web service for possible security problems.
+It is an optional extra here. The functional and permission tests are still needed.
+No ZAP report is saved yet. To try it, use the local test environment,
+start the three services from section 4, and target component A at:
+
+```text
+http://127.0.0.1:8000
+```
+
+Use ZAP's automated scan workflow if available in your installed edition, or
+provide the authenticated JSON requests from the API walkthrough. A scan of
+only the root URL checks very little: this API has no homepage, and protected
+routes require tokens. Record which routes were checked and how requests were
+authenticated. A scan with no findings does not prove that all permission
+checks work.
+
+An active scan can create or modify test data. Stop services before changing
+comparison branches and restart them from the intended version. Save a
+generated report under a labelled directory such as `docs/evidence/zap/`,
+with revision, target, date, and scope. Review the export for live tokens,
+private keys, or credentials before committing it. ZAP is optional. No
+`run.bat` or port-5000 service is needed for this application.
 
 ## 9. Useful source files
 
 - `app/views.py`: HTTP flow, validation, token checks, and service calls.
 - `app/security.py`: JWT creation and verification.
-- `app/store.py`: C's SQLite storage and ownership checks.
+- `app/store.py`: component C's SQLite storage and ownership checks.
 - `app/urls.py`: service-specific routes.
 - `scripts/setup_lab.py`: local keys, database, and user seeding.
 - `scripts/serve.py`: starts one component per process.
@@ -380,27 +533,26 @@ Runtime analyses remain on disk for the next run.
 
 | Symptom | Check |
 |---|---|
-| Python or `.venv` path not found | Use the repository root and complete installation with Python 3.12. |
+| Python or `.venv` path not found | Use the repository root and complete installation with Python 3.12. For Jenkins, check its service PATH and Build-stage executable/version output. |
 | `No module named alert_helper` | Build/install the helper with the same `.venv` Python used to run the app. |
 | Missing key file or failed seeded login | Run `scripts/setup_lab.py` in the intended local environment. |
-| Address already in use | Stop the earlier service you started, or free ports 8000–8002 / test ports 18000–18002. |
-| 401 | Log in again; check the Bearer header and that the client uses A. |
+| Address already in use | Stop the earlier manual service you started, or free its port in 8000–8002. Tests allocate their own ports. |
+| 401 | Log in again. Check the Bearer header and that the client uses component A. In CI, check startup logs and confirm all services use that run's temporary keys. |
 | 403 on delete / 404 for Bob's read | Expected authorization denial for these examples. |
-| 400 | Check exact JSON fields and endpoint path; avoid adding an owner field. |
-| 503/504 | Check B/C health and their terminal output. |
-| Browser shows 404 at `/` | This is an API without a homepage; use `/health` or the documented API requests. |
-| Git shows unexpected branches | Check `git rev-parse --show-toplevel`; the outer extraction may be another repository. |
+| 400 | Check exact JSON fields and endpoint path. Avoid adding an owner field. |
+| 503/504 | Check component B and component C health and their terminal output. |
+| Browser shows 404 at `/` | This is an API without a homepage. Use `/health` or the documented API requests. |
+| Git shows unexpected branches | Check `git rev-parse --show-toplevel`. The outer extraction may be another repository. |
 
-For evidence, save each run under a new filename and record the commit/command.
-Do not overwrite historical vulnerable/corrected logs to make them look like
-new runs.
+Save new results separately, with the command and commit, so they are easy
+to compare with earlier runs.
 
 ## 11. Known limitations
 
-The current processing result uses a deterministic development model stub. It
-does not prove real model accuracy or production readiness. Docker Compose has
-not been verified in the local run. Protected transport, key rotation,
-durable background processing, monitoring, and production model evaluation
-remain unimplemented production considerations. The assignment does not require
-Ollama or Docker specifically. Remaining required work is listed separately in
-[Verification](Verification.md#remaining-work-before-claiming-submission-completion).
+The current processor builds a fixed development summary instead of using
+a real model. Its accuracy as a real threat assessment has not been tested.
+Docker Compose has not been verified by running it here. Encrypted transport,
+key replacement, reliable background processing, monitoring, and model
+assessment are future production needs. The assignment does not require
+Ollama or Docker specifically. Remaining required work is listed in
+[Verification](Verification.md#remaining-work).

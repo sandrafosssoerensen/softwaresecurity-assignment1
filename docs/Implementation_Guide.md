@@ -1,92 +1,83 @@
 # Learning guide: rebuild the application from an empty repository
 
-This is a learning exercise for reproducing and understanding the existing
-project. It deliberately starts from an empty repository; it does not mean
-the current repository is empty or that every task below is unfinished.
+Use this guide to practise rebuilding the application in a separate folder.
+It explains what to implement first and how the pieces fit together.
 
-For running the existing application, use [How to run](How_To_Run.md).
-For the actual completion status, use
-[Requirements traceability](Requirements_Traceability.md) and
-[Verification](Verification.md). In particular, the current composition
-demonstration and CI gates still have open items.
-
-Work in a separate learning directory/repository if you reproduce the code.
-Preserve the assignment repository and its original history.
+To run the existing project, use [How to run](How_To_Run.md).
+For unfinished work, see [Verification](Verification.md).
+[Terminology](Terminology.md) explains technical words.
 
 ## 1. Understand the scope before coding
 
-The supplied assignment requires three separate communicating processes,
-authentication, authorization, at least three functions, two ordinary users,
-one privileged user, and a project-owned helper installed as a dependency.
-One function must involve all three components.
+The assignment requires three separate programs that communicate,
+login and permission checks, at least three functions, two ordinary users,
+one administrator, and your own helper installed as a package. At least
+one function must use all three programs.
 
-It also requires three catalogue vulnerabilities and a distinct composition
-vulnerability with evidence, a pre-implementation four-phase SSDLC plan,
-Jenkins build/analysis/tests/artifacts on pushes and PRs, release gates, a
-2,000–2,500-word report, an AI-use declaration, and full Git history.
+It also requires three catalogue flaws, one additional flaw caused by how
+the services work together, a four-phase security plan committed before code,
+Jenkins checks on pushes/pull requests, saved results, a report, an AI-use
+declaration, and full Git history.
 
-The chosen domain is synthetic IDS-alert processing:
+The chosen workflow is:
 
 ```text
-Submit alert → validate and summarise → store protected result → read result
+Submit alert → check and summarise → store result → read permitted result
 ```
 
-The current processor is a labelled deterministic stub. The assignment does
-not specifically require Ollama, a GUI, or Docker. The malicious supply-chain
-exercise is optional; the benign installable helper is required.
+The processor uses a fixed development summary. A real AI model, website
+pages, Docker, and the optional malicious-package experiment are not required.
+The ordinary installable helper is required.
 
-Read [Design](Design.md) and explain these rules in your own words:
+Read [Design](Design.md) and explain:
 
-- Alice and Bob can create analyses and access their own results.
-- Admin can access all results and delete.
-- B receives authority for one processing job and one C create operation.
-- C enforces resource permissions even when a request comes from another service.
-- A database or helper module does not count as an application process.
+- Why Alice can read her own result but Bob cannot.
+- Why admin can read all results and delete them.
+- Why component B gets permission for only one processing/storage task.
+- Why component C checks requests even when they come from another service.
+- Why a database or imported package does not count as a separate program.
 
 ## 2. Write the plan and design
 
-For a fresh learning implementation, commit the plan before feature code.
-For the existing assignment, the original plan is already in `8e1b610`;
-do not rewrite history to suggest later decisions occurred earlier.
+For a new learning project, commit the plan before implementing features.
+The existing assignment already has its original plan in `8e1b610`.
 
-Record functional/non-functional requirements, data flow, assets, trust
-boundaries, an access matrix, STRIDE threats, and at least three secure
-design principles. Follow:
+Describe what the application must do, what data needs protection, how data
+moves, who may do what, possible attacks, and the controls. Follow:
 
 ```text
-Asset → threat → control → lifecycle activity → evidence → gate decision
+What needs protection → possible threat → protection → development activity
+→ test or evidence → decision about continuing/releasing
 ```
 
-The four phases are requirements, implementation/build, testing, and
-release/operation. Define what evidence is needed to pass each phase.
-[SSDLC_Plan.md](SSDLC_Plan.md) distinguishes intended gates from those
-currently enforced.
+The phases are requirements, implementation/build, testing, and
+release/operation. [SSDLC_Plan.md](SSDLC_Plan.md) explains them and
+distinguishes planned protections from checks that actually run.
 
 ## 3. Create the project structure
 
 Use the existing files as references:
 
 ```text
-app/                 Django settings, routes, views, tokens, storage
-helper/              pyproject.toml and src/alert_helper/
+app/                 Django settings, routes, request handlers, tokens, storage
+helper/              Separate installable package
 scripts/             setup_lab.py and serve.py
 examples/            request.json
 tests/               test_flow.py and test_store_sql.py
-docs/                design, plan, run guide, verification, and evidence
-manage.py            Django command entry point
-requirements.txt     application dependency versions
+docs/                Explanations, guides, and saved evidence
+manage.py            Starts Django commands
+requirements.txt     Application package versions
 requirements-build.txt
-Jenkinsfile
+Jenkinsfile          Automated build/check steps
 README.md
 ```
 
-Container files are optional additions. Do not copy runtime keys/databases,
-virtual environments, or real credentials into the learning repository.
-The documented synthetic password is only for the local lab.
+Keep generated keys, databases, virtual environments, and real credentials
+outside Git. The documented password is for synthetic lab accounts only.
 
 ## 4. Install dependencies and the helper
 
-From the new repository root, after creating the requirements and helper files:
+After creating the requirements and helper files:
 
 ```powershell
 py -3.12 -m venv .venv
@@ -95,163 +86,166 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --no-deps helper\dist\alert_helper-0.1.0-py3-none-any.whl
 ```
 
-Study `helper/pyproject.toml`: package name `alert-helper`, version `0.1.0`,
-source under `src/`. The import is `alert_helper`.
-`select_alert()` selects/validates alert fields; `validate_result()` checks
-result shape and evidence references. B must use the installed package,
-rather than a copy inside `app/`.
+The package name in `helper/pyproject.toml` is `alert-helper`. The
+Python import name is `alert_helper`. A wheel is its installable file.
 
-Pinning listed versions helps repeatability. It does not itself reject every
-unlisted dependency or verify package approval/content. The current pipeline
-still needs an explicit dependency approval gate.
+`select_alert()` checks input and selects the fields used for processing.
+`validate_result()` checks the output fields. Component B imports these installed
+functions. It does not keep a copied package inside `app/`.
+
+An exact version such as `Django==5.2.18` is pinned. Pinning helps repeated
+setup. The pipeline also checks every installed package against exact
+approved names and versions. Read `requirements-ci.txt`,
+`ci/approved-local.txt`, and `scripts/check_dependencies.py` for that gate.
+Pinning and inventory checks do not verify a package's file contents.
 
 ## 5. Implement one layer at a time
 
 ### Django entry points and routing
 
-Read `manage.py`, `app/settings.py`, `app/urls.py`, and `scripts/serve.py`.
+Read `manage.py`, `app/settings.py`, `app/urls.py`, and
+`scripts/serve.py`.
 
-`SERVICE` selects A, B, or C. The same code runs in three separate processes
-with different routes and data directories. `settings.py` loads Django's
-authentication apps/database only for A.
+The `SERVICE` value selects component A, component B, or component C. Each runs the same source files
+in a separate process, with its own routes and data settings. Only component A loads
+Django's user-account database.
 
-Explain why three server processes satisfy the architecture requirement,
-whereas three classes in one process would not.
+Explain why running three processes differs from defining three classes
+inside one process.
 
 ### Users and signed authority
 
-Read `scripts/setup_lab.py`, `login()` in views, and `app/security.py`.
+Read `scripts/setup_lab.py`, `login()`, and `app/security.py`.
 
-Setup generates RSA keys, migrates A's database, and seeds alice/bob/admin.
-Django verifies passwords; A maps `is_staff` to the admin role.
-A issues RS256 tokens. Verification fixes the algorithm and checks signature,
-issuer, audience, expiry, required claims, scope, and role.
+Setup creates RSA keys, prepares component A's database, and creates alice/bob/admin.
+Django checks passwords. Component A treats the admin account's `is_staff` flag as
+the administrator role.
 
-Explain the additional `analysis_id` checks in the views. The authority
-table in [Design](Design.md) gives the actual audiences, scopes, and lifetimes.
-B/C receive only public-key configuration in the normal launch, although
-same-user local processes are not filesystem-isolated.
+Component A signs tokens containing the user and permitted action. Services check
+the signature, issuer, intended service, expiration, required fields,
+action, and role. The views also check analysis IDs.
 
-### Resource service C
+Use the [token table](Design.md#authentication-and-authority-binding) to
+explain which service receives each token. Component B passes component A's storage token to component C.
+it does not sign a new one.
+
+Only component A is configured with the private-key path, but all local processes
+share the same Windows account. This setup does not isolate their files.
+
+### Component C — resource service
 
 Read `app/store.py` and `stored_analyses()`.
 
-C's SQLite table has `id`, `owner`, and JSON `document` columns.
-Parameterization keeps values separate from SQL syntax:
+Component C stores an ID, owner, and JSON document for each analysis. SQL parameters
+keep supplied values separate from query syntax:
 
 ```python
 db.execute("SELECT * FROM analyses WHERE id=?", (analysis_id,))
 ```
 
-C's view validates token authority and binds resource IDs. The store checks
-read ownership and filters lists. The view checks administrator authority
-before calling `store.delete()`.
+Component C's HTTP handler checks the token and requested action/analysis ID.
+The store checks ownership on read and filters lists. The handler checks
+admin before calling `store.delete()`.
 
-Explain why an unpredictable ID cannot replace authorization.
+Explain why a hard-to-guess ID is not a replacement for permission checks.
 
-### Processing service B
+### Component B — processing service
 
 Read `analyze()`.
 
-B verifies execute authority, limits alert JSON size, validates selected
-fields, verifies the C create token, and matches user/resource claims between
-the tokens. It constructs a stub result, validates it, and sends the document
-to C. C independently validates and derives ownership from the token.
+Component B checks permission to process, checks input size, validates alert fields,
+and checks that the token permitting storage in component C names the same user and
+analysis. It creates the development result and sends it to component C together
+with that existing token. Component C checks the request independently.
 
-Explain why a plain `owner_id` in the body would not be equivalent to a
-verified claim.
+Explain why component C should trust the signed user ID rather than an `owner_id`
+chosen in the request body.
 
-### Public API A and service calls
+### Component A — public API and service calls
 
-Read `public_analyses()`, `body()`, `authority()`, `relay()`, and
-`endpoint()`.
+Read `public_analyses()`, `body()`, `authority()`, `relay()`,
+and `endpoint()`.
 
-A validates the client token, allocates an ID, and delegates create to B with
-limited tokens. Read/list/delete use C directly. `relay()` carries the HTTP
-response back. The endpoint wrapper maps selected errors to API responses.
-A timeout is not a transaction rollback guarantee.
+Component A checks the user's token, chooses an analysis ID, and asks component B to process
+using limited tokens. List/read/delete requests go from component A directly to component C.
+The response travels back through component A. The endpoint wrapper converts known
+errors into HTTP responses.
 
-Trace a complete request with the [sequence diagram](Design.md#create-analysis-sequence).
+Follow the [sequence diagram](Design.md#create-analysis-sequence).
+Explain why a timeout does not undo data component C already stored.
 
 ## 6. Test behavior as you build
 
-The existing commands are:
+Run:
 
 ```powershell
 .\.venv\Scripts\python.exe tests\test_store_sql.py
 .\.venv\Scripts\python.exe tests\test_flow.py
 ```
 
-The saved baseline contains one SQL test and nine HTTP tests. Read the exact
-[test coverage table](Verification.md#recorded-baseline-tests) before claiming
-a particular behavior is tested.
+The saved corrected version passes one SQL test and nine HTTP tests.
+[The coverage table](Verification.md#test-results) says what
+each checks. Tests of allowed requests are important alongside attack tests.
 
-When rebuilding, cover successful login/create/list/read, owner access,
-cross-user denial, admin access/deletion, create-token deletion denial,
-forged/expired/wrong-audience tokens, oversized input, untrusted owner fields,
-and SQL injection. Use legitimate positive controls alongside denied attacks.
+When practising, cover login, normal creation/list/read, another user's
+denied read, admin deletion, wrong/expired/changed tokens, large input,
+untrusted owner fields, and SQL injection.
 
-Additional tests worth adding include invalid-password login, malformed JSON,
-missing claims, resource-ID mismatch, and malformed result schemas. These
-are learning/test-extension targets, not all present in the current suite.
+Invalid-password, malformed-JSON, missing-token-field, wrong-analysis-ID,
+and invalid-result tests would be useful additions. The current suite
+does not check every one of those cases.
 
 ## 7. Reproduce the controlled vulnerability experiments
 
-Follow [Vulnerability_Experiments_Guide.md](Vulnerability_Experiments_Guide.md).
-For each, isolate the change, preserve unrelated controls, run a targeted
-security assertion, save output with its revision, restore the control, and
-run the same test plus a legitimate positive control.
+Use [Vulnerability_Experiments_Guide.md](Vulnerability_Experiments_Guide.md).
+A test must reach its intended assertion for a failure to demonstrate the flaw.
 
-Current status:
+The saved results show:
 
-- CWE-20: oversized input acceptance demonstrated, then blocked.
-- CWE-862: cross-user read recorded, then blocked; the cited vulnerable commit
-  still has the ownership check, so a runnable variant must be preserved.
-- CWE-89: direct storage-query injection recorded, then parameterized; the
-  cited unsafe snapshot has a method-name typo and needs a reproducible replay.
-- Composition/CWE-807: corrected rejection passes; vulnerable attempt fails
-  during setup and must be repaired/rerun before claiming an exploit.
+- Missing size check: large input accepted, then rejected after correction.
+- Missing owner check: Bob reads Alice's result, then is denied after correction.
+- SQL built from input: injected ID returns a record, then no record with parameters.
+- Composition flaw: a token permitting creation for Alice is used to store
+  the result for Bob. Corrected component C rejects the body owner.
 
-Retain commented explanatory variants if useful, but keep vulnerable behavior
-inactive on the submission branch. Preserve runnable experiment versions and
-actual evidence; comments or commit names alone do not demonstrate an exploit.
+Use `5e58e8f` for the combined vulnerable version and `e3378c6` for
+the corrected application. Some older attempts cannot repeat their saved
+results unchanged. The experiment guide explains why.
+
+The combined version removes both owner-on-write and owner-on-read protections.
+Its wrong-owner response proves the incorrect write, but the later read does
+not isolate the composition flaw's effect. Keep that limit in your explanation.
 
 ## 8. Understand and finish the CI gates
 
-Read `Jenkinsfile` and compare it with
+Read the `Jenkinsfile` and
 [Verification](Verification.md#jenkins-evidence-and-gaps).
 
-The existing pipeline builds/installs, runs Bandit and pip-audit, tests, and
-archives reports. Bandit scans suspicious Python patterns; pip-audit checks
-known dependency advisories; the regression tests exercise application behavior.
+Jenkins runs package installation, helper build, source checks, package
+advisory checks, tests, and report saving. A gate is a rule that makes the
+build fail when a required check fails.
 
-The remaining tasks include reliable nonzero-exit propagation in Windows
-batch steps, rejection of unapproved dependencies, and evidence of automatic
-push/PR builds. A passing build does not show a failing control would be
-blocked. Test both outcomes.
+Build commands use separate Jenkins steps. The test stage checks all three
+suite exit codes. The dependency gate checks the approved installed inventory,
+and HTTP tests use separately allocated ports. Local tests verify the gate
+and concurrent HTTP runs. New Jenkins runs and complete automatic
+push/pull-request evidence still need to be saved.
+
+The current Jenkinsfile uses `python` from the Windows service PATH.
+The console shows its path and version. Check these before investigating
+application errors.
 
 ## 9. Explain and hand over the result
 
-Use each document for a specific purpose:
+Use the [report source map](Requirements_Traceability.md#report-source-map).
+Explain the application purpose, service boundaries, flow of permission,
+three principles, four experiments, observed tests/scans, security gates,
+remaining limits, and production needs.
 
-| Document | Purpose |
-|---|---|
-| [README](../README.md) | Purpose, quick setup, and current status |
-| [How to run](How_To_Run.md) | Reproducible usage and demonstration |
-| [Design](Design.md) | Architecture, data flow, authority, threats, principles |
-| [SSDLC plan](SSDLC_Plan.md) | Historical plan, lifecycle activities, gates |
-| [Verification](Verification.md) | Actual outcomes, coverage, and gaps |
-| [Traceability](Requirements_Traceability.md) | Requirement-to-evidence checklist |
-| [AI declaration](AI_Use.md) | Accurate account of assistance and author review |
+For each function, identify its inputs, what is trusted, what is rejected,
+what changes it makes, and which test checks it. Practise explaining it
+without reading the code.
 
-The final report should explain why the boundaries were chosen, how authority
-travels through the workflow, the three principles, SSDLC/gates, four
-experiments, evidence limits, and production needs. The report and author's
-final AI declaration are still outstanding.
-
-For each function you reproduce, identify its inputs, trusted claims, rejected
-cases, side effects, and test. Then explain it without reading the code.
-Use real small commits reflecting your work; do not invent earlier milestones.
-
-For final completion use the single maintained checklist in
-[Verification](Verification.md#remaining-work-before-claiming-submission-completion).
+Use the
+[completion checklist](Verification.md#remaining-work)
+for actual unfinished work.

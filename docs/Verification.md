@@ -1,190 +1,215 @@
 # Verification, evidence, and remaining work
 
-Documentation review date: 2026-10-19. This review compared the current code,
-Git history, supplied assignment PDF, and saved evidence. It did not rerun the
-application, scanners, Docker, or Jenkins. Historical output remains unchanged.
+The saved Jenkins comparison passes ten application tests on the fixed
+version and fails four on the vulnerable version. The updated local suite
+also passes six dependency-gate tests. This page distinguishes those older
+Jenkins results from the new local CI checks and remaining handover work.
 
-The corrected baseline is implemented and has passing saved tests. The full
-submission is not yet verified complete: the composition experiment and
-several CI requirements still need work.
+Read [Terminology](Terminology.md) for unfamiliar test and CI terms.
 
-## Recorded baseline tests
+## Test results
 
-The recorded environment uses Python 3.12 with Django 5.2.18 and PyJWT 2.15.1.
-The helper is built as a wheel and installed into the environment.
+The test environment uses Python 3.12, Django 5.2.18, PyJWT 2.15.1,
+and the installed `alert-helper==0.1.0` package.
 
-Run from the repository root:
+Run from the repository root, one command after the other:
 
 ```powershell
+.\.venv\Scripts\python.exe tests\test_dependency_gate.py
 .\.venv\Scripts\python.exe tests\test_store_sql.py
 .\.venv\Scripts\python.exe tests\test_flow.py
 ```
 
-The [SQL output](evidence/jenkins/build-4/test_store_sql.txt) records one passing
-test. The [HTTP output](evidence/jenkins/build-4/test_flow.txt) records nine.
-Earlier CWE-20/CWE-862 logs contain eight HTTP tests because the composition
-regression was added later.
+[Fixed SQL output](evidence/jenkins/fixed-version/build-4/test_store_sql.txt)
+shows one passing test. [Fixed HTTP output](evidence/jenkins/fixed-version/build-4/test_flow.txt)
+shows nine. Older logs have eight HTTP tests because the test for untrusted
+ownership was added later.
 
-| Test | What it demonstrates |
+| Test | What the passing result shows |
 |---|---|
-| `test_create_read_cross_user_and_admin` | Alice creates/reads; Bob's read is 404; admin reads; result is labelled as a stub. |
-| `test_list_only_owned` | Alice's listing contains her record and excludes Bob's. |
-| `test_delete_role_and_positive_control` | Ordinary deletion is 403; admin deletion is 204; later read is 404. |
-| `test_b_authority_cannot_delete` | A C create token cannot delete directly at C; the record remains readable. |
-| `test_expired_and_wrong_audience` | Expired delete authority and an A token used at C are rejected; record remains. |
-| `test_invalid_signature_and_unknown_owner` | Blank alert-signature text and an unexpected owner field at A are rejected. “Signature” here is alert text, not a JWT signature. |
-| `test_forged_token` | A tampered JWT signature is rejected. |
-| `test_size_limit_direct_b` | A direct authenticated B request with 66,000 padding characters receives 413. |
-| `test_untrusted_owner_field_cannot_change_owner` | C rejects an extra owner field (400), and Bob cannot read the uncreated ID (404). |
-| `test_injected_analysis_id_does_not_return_a_record` | A direct call to the parameterized storage query treats the SQL payload as data and returns `None`. |
+| `test_create_read_cross_user_and_admin` | Alice creates and reads her result. Bob gets 404. Admin can read it. The result is labelled as a development stub. |
+| `test_list_only_owned` | Alice's list includes her result and excludes Bob's. |
+| `test_delete_role_and_positive_control` | An ordinary user's delete gets 403 and leaves the record in place. Admin deletes with 204. A later read gets 404. |
+| `test_b_authority_cannot_delete` | A token permitting creation in component C cannot be used for deletion. The record remains readable. |
+| `test_expired_and_wrong_audience` | Component C rejects an expired token and a token intended for component A. |
+| `test_invalid_signature_and_unknown_owner` | Component A rejects blank alert-signature text and an unexpected owner field. “Signature” here is an alert description, not a JWT signature. |
+| `test_forged_token` | Component A rejects a JWT whose signature was changed. |
+| `test_size_limit_direct_b` | Component B rejects a validly authenticated request containing 66,000 padding characters with 413. |
+| `test_untrusted_owner_field_cannot_change_owner` | Component C rejects an extra owner field with 400. Bob then gets 404 for that uncreated record. |
+| `test_injected_analysis_id_does_not_return_a_record` | The storage query treats the SQL payload as a value and returns `None`. |
 
-Successful login for all three seeded users is exercised during HTTP setup.
-Invalid-password login, all missing-claim/malformed-JSON combinations,
-invalid result schemas, replay, and every resource-mismatch path are not
-individually covered by these ten tests. Passing tests do not establish
-coverage of every security guarantee.
+The test setup logs in all three users. These tests do not check every
+possible invalid password, missing token field, malformed request, wrong
+analysis ID, repeated token use, or invalid result format.
 
 ## Vulnerability evidence
 
-| Experiment | Actual vulnerable observation | Corrected observation | Evidence |
+The [evidence index](evidence/jenkins/README.md) links the fixed and vulnerable
+results. Older per-CWE logs are also kept for reference.
+
+| Flaw | Vulnerable result | Corrected result | Evidence |
 |---|---|---|---|
-| CWE-20 | Size regression fails with `201 != 413`: oversized alert accepted. | Eight-test run passes, including 413 check. | [Vulnerable](evidence/CWE-20-vulnerable.txt), [corrected](evidence/CWE-20-corrected.txt) |
-| CWE-862 | Bob reads Alice's result: `200 != 404`. | Eight-test run passes, including cross-user denial. | [Vulnerable](evidence/CWE-862-vulnerable.txt), [corrected](evidence/CWE-862-corrected.txt) |
-| CWE-89 | Injected ID returns `known-analysis` to its owner in a storage-level test. | One SQL test passes with no result for the injected string. | [Vulnerable](evidence/CWE-89-vulnerable.txt), [corrected](evidence/CWE-89-corrected.txt) |
-| Composition/CWE-807 | Six tests fail creating an ordinary fixture with `400 INVALID_FIELDS`; the attack request is never reached. | Nine-test run passes, including rejection of the untrusted owner field. | [Incomplete vulnerable attempt](evidence/CWE-807-vulnerable.txt), [corrected](evidence/CWE-807-corrected.txt) |
+| CWE-20: missing size check | Oversized input is accepted: 201 instead of 413. | The test passes by receiving 413. | [Vulnerable HTTP](evidence/jenkins/vulnerable-version/build-4/test_flow.txt), [fixed HTTP](evidence/jenkins/fixed-version/build-4/test_flow.txt) |
+| CWE-862: missing owner check | Bob reads Alice's result: 200 instead of 404. | Bob is denied, while Alice and admin can read. | Same HTTP reports |
+| CWE-89: SQL built from input text | The injected ID returns the record `known-analysis`. | The same input returns no record. | [Vulnerable SQL](evidence/jenkins/vulnerable-version/build-4/test_store_sql.txt), [fixed SQL](evidence/jenkins/fixed-version/build-4/test_store_sql.txt) |
+| Composition/CWE-807: request body chooses owner | A token permitting creation for Alice is used with Bob as body owner. Component C returns 201 and owner `2`. Bob reads with 200. | Component C rejects the owner field with 400, then returns 404 for the read. Normal create/read still works. | Same HTTP reports |
 
-The CWE-20 evidence demonstrates missing size validation, not measured CPU,
-memory, model calls, or successful service exhaustion. The CWE-89 evidence is
-at the storage layer: the HTTP handler additionally validates UUIDs and the
-test retains ownership checks. It is not proof of cross-user HTTP SQL injection.
+The size test shows acceptance of large input. It does not measure CPU or
+memory exhaustion. The SQL test calls the database function directly.
+the HTTP route checks the ID format first. It does not prove SQL injection
+through the public HTTP API.
 
-The composition evidence needs correction. Its test begins with
-`original = self.create()`; that fails before the forged owner is submitted.
-Commit `96fb053`, despite its message, contains active corrected C code and
-commented vulnerable alternatives. It is not an executable vulnerable
-snapshot. Commit `718aee3` merges that work.
-
-To complete this experiment, preserve a runnable isolated variant, let normal
-setup succeed, send a valid Alice-scoped create request carrying Bob's owner
-field directly to C, and record whether Bob can read the stored result.
-Then repeat with the corrected control and capture denial plus a legitimate
-create/read positive control. Do not relabel the old log as a successful
-exploit; add clearly identified new evidence.
-
-Some older files contain PowerShell `NativeCommandError` wrappers around
-Python unittest's stderr output. Interpret the actual assertions and final
-`OK`/`FAILED` summary; the wrapper alone does not prove a failed test.
+The composition test creates tokens with the lab private key to simulate
+component B's legitimate permission to store an analysis for Alice. It does not show
+an ordinary client obtaining that signing key. The vulnerable comparison
+also removes read ownership checking. The response proves that the wrong
+owner was stored. Bob's later read does not by itself distinguish the
+composition flaw from the missing read check. A test with only the
+composition flaw enabled would give stronger evidence of its separate effect.
 
 ## Git references
 
-| Work | Commit reference |
+| Work | Reference |
 |---|---|
-| Original plan, before implementation | `8e1b610` |
-| Initial implementation | `7f04cee` |
-| CWE-20 unsafe / restored control | `37e5f96` / `dd2643a` |
-| CWE-862 vulnerable log / corrected log and formatting | `185aada` / `3e3f7f6`; both retain the ownership check |
-| CWE-89 intended unsafe query / restored query | `37646f2` / `a7039b4`; the former contains a method-name typo |
-| Composition test, comments, and incomplete evidence | `96fb053`, merged by `718aee3` |
-| Jenkins pipeline / Python path | `698f103` / `0c981d3` |
-| Saved Jenkins artifacts | `aacca35` |
+| Original plan/design, followed by first implementation | `8e1b610`, then `7f04cee`. |
+| Corrected application used for comparison | `e3378c6`. `a8881eb` later adds and reorganizes evidence. |
+| Runnable version with all four flaws | `5e58e8f`. |
+| Jenkins change to find Python through PATH | `d67a0c2`. |
+| Older individual experiments | `37e5f96` / `dd2643a` (CWE-20), `185aada` / `3e3f7f6` (CWE-862), `37646f2` / `a7039b4` (CWE-89), `96fb053` / `718aee3` (composition). |
 
-Use `git show <commit>` to inspect actual changes. A commit message or
-filename is not proof of the behavior claimed.
+Some older code versions cannot repeat their saved results unchanged.
+The older CWE-862 commit still checks ownership. The older CWE-89 commit
+misspells `execute` as `exectue`. The old
+[CWE-807 log](evidence/CWE-807-vulnerable.txt) fails while preparing test
+data, before the attack request. Use the newer comparison version and
+reports when repeating the experiments.
 
-Two additional historical reproducibility problems were found:
-
-- `185aada` adds only the CWE-862 vulnerable log; its `store.py` still
-  enforces ownership. Checking out this commit alone does not reproduce
-  the logged disclosure.
-- `37646f2` contains the intended interpolated SQL but calls
-  `db.exectue(query)` instead of `db.execute(query)`. That snapshot would
-  raise an attribute error rather than produce the saved injection result.
-
-The saved logs still record the intended CWE-862/CWE-89 effects, but they
-cannot be reproduced from those snapshots unchanged. Preserve history and
-add clearly identified runnable variants, with new output tied to their
-revisions. The experiment guide describes the intended code changes.
+```powershell
+git diff fixed-version vulnerable-version -- app/store.py app/views.py
+git show 8e1b610:docs/SSDLC_Plan.md
+```
 
 ## Jenkins evidence and gaps
 
-The recorded job is `software-security-assignment1-ci`, build #4 on
-`assignment-work` at `0c981d3`, reported as `SUCCESS`. The five archived
-reports are saved in [evidence/jenkins/build-4](evidence/jenkins/build-4/).
-The complete Jenkins console/job configuration is not included there.
+The [evidence index](evidence/jenkins/README.md) lists the saved reports.
+The comparison folders do not contain full checkout logs, so save those
+with future runs to identify the exact job, build, and commit.
 
-[bandit.json](evidence/jenkins/build-4/bandit.json) contains zero high,
-zero medium, and one low-severity finding: B105 on the literal `Bearer` in
-`app/views.py` (line 88 in that scan). Inspection shows this is a token-type
-response value, not a password. This finding is documented rather than removed.
-Bandit scans `app/` only.
+The assignment-work #10 console shows a manually started build at
+`d67a0c2`. Jenkins found Python 3.12.10, built/installed the helper, ran
+scanners and the test stage, saved reports, and ended with
+`Finished: SUCCESS`. Export its complete console and individual test
+reports for the final evidence folder.
 
-[pip-audit.json](evidence/jenkins/build-4/pip-audit.json) reports no known
-vulnerabilities for its 13 resolved dependencies at the time of that run.
-It is an audit of `requirements.txt`, not an audit of every build/CI package
-or proof that future advisories will not appear.
+### Scanner findings and release policy
 
-The report-generation Bandit commands use `--exit-zero`. The separate
-`-lll` command supplies the high-severity gate; this matches the
-[Bandit command documentation](https://bandit.readthedocs.io/en/latest/man/bandit.html).
-The pip-audit command has no severity filter: reported vulnerabilities cause
-failure, as described in [pip-audit's exit codes](https://github.com/pypa/pip-audit#exit-codes).
+| Check | What it does | Current result or limitation |
+|---|---|---|
+| Bandit report commands | Save JSON/text findings using `--exit-zero`. | They collect results without applying the release rule. |
+| Bandit gate | `bandit -r app -lll` fails on high-severity findings. | Neither comparison has high findings. Medium B608 does not trigger this rule. |
+| pip-audit | Checks required packages for known advisories. A finding or tool error makes the stage fail. | Both saved audits report no known advisories in the packages checked. |
+| Dependency approval | Compare installed packages against approved names and exact versions. | A clean 46-package environment passes locally. An environment with extra `pypdf` fails. |
+| Tests | Compare actual behavior with the expected secure behavior. | The updated stage collects all three suite exit codes and fails if any is nonzero. Local fixed tests pass and vulnerable application tests fail as expected. |
+
+B105 flags `"token_type": "Bearer"` as a possible password. This is a
+false positive: `Bearer` names the authentication scheme and contains no
+secret. Document that explanation with the warning.
+
+B608 flags SQL made by inserting text into a query. The SQL test confirms
+that the query can return a record for the injected ID. Bandit's severity
+and confidence labels are estimates. A finding needs review.
+
+Bandit scans only `app/`. It does not scan the helper, scripts, or tests.
+pip-audit checks runtime requirements rather than every package used by
+build tools. The saved clean audit describes those package versions on that
+date, not all future installations.
 
 ### Failure propagation
 
-The current `Jenkinsfile` places several commands in one Windows `bat`
-block without checking each command's exit code. Specifically, SQL tests run
-before flow tests. A failing SQL test followed by a passing flow test can leave
-the batch step with a success exit code. The build-install block has the same
-pattern.
+“Failure propagation” means making sure a failed command also makes Jenkins
+fail. Build commands now run in separate `bat` steps. The Tests stage uses
+`returnStatus: true` for each suite, saves all three reports, and calls
+`error(...)` if any suite fails. A passing HTTP suite cannot overwrite the
+SQL suite's result.
 
-A read-only local batch diagnostic during this review returned exit code 0
-after an inner `exit 1` followed by `exit 0`. Jenkins's
-[`bat` documentation](https://www.jenkins.io/doc/pipeline/steps/workflow-durable-task-step/#bat-windows-batch-script)
-says it fails on the script's nonzero exit status. Thus the intended “every
-required failure blocks release” policy is not reliably enforced by this file.
-Split commands into separately checked steps or explicitly propagate failures,
-then verify with a deliberately failing control.
+The updated Jenkins pipeline still needs a fresh run. For a direct gate
+demonstration, use a temporary branch with only the SQL flaw enabled,
+confirm SQL fails while HTTP passes and Jenkins still fails, then return
+to the corrected version. Do not label local tests as Jenkins evidence.
 
-### Dependency approval and artifacts
+### Environment isolation and artifacts
 
-Requirements files pin listed application/build versions and the helper wheel
-is explicitly installed. However, pip is upgraded, Bandit/pip-audit are
-installed unpinned, and the Windows audit also resolves unlisted `tzdata`.
-There is no installed-inventory/approval comparison. The required rejection
-of unexpected/unapproved artifacts is not yet enforced; version pinning is
-not equivalent to approval verification.
+Each HTTP suite uses temporary keys, users, and databases. Component C,
+component B, and component A start in that order on separate loopback
+ports allocated by the operating system. Each server publishes its port
+only after binding, and the suite checks its service identity and health.
 
-The pipeline archives `reports/**` when available, including test text and
-analysis reports. It allows empty archives. No test currently writes JUnit
-XML, despite an optional archive pattern. Temporary A/B/C logs are deleted by
-the test harness and are not in the archived reports.
+Two local HTTP suites ran concurrently and both passed all nine tests.
+A separate concurrent fixed/vulnerable comparison preserved the intended
+differences: fixed HTTP passed, vulnerable HTTP had three security failures.
+`disableConcurrentBuilds()` remains useful within a branch, but is no
+longer relied on to separate ports across branches.
+
+An artifact is a saved output file. Jenkins archives generated text/JSON
+reports even after failure and then clears its workspace. Empty archives
+are permitted when an earlier failure prevented report creation. Tests
+do not generate JUnit XML. Temporary service logs are removed after tests.
+
+### Dependency approval
+
+The consumer-controlled approval list consists of `requirements.txt`,
+`requirements-build.txt`, `requirements-ci.txt`, and
+`ci/approved-local.txt`. Every entry requires an exact name and version.
+The local helper has its own approved entry outside the helper source.
+
+The approval script checks the installed inventory after installation and
+before application tests. Extra packages, missing packages, duplicate
+installed distributions, or changed versions fail the stage. Conflicting
+or unpinned approval entries are rejected as invalid configuration.
+
+[Local CI checks](evidence/local-ci-fixes/README.md) include a passing
+46-package inventory and an actual rejected environment containing an extra
+`pypdf` package. Six unit tests cover accepted inventory, extra/missing
+packages, changed versions, name normalization, and unpinned requirements.
+
+This is an inventory gate, not a content-hash or sandbox guarantee. A
+different package with the same name/version would require content
+verification to detect. Installation happens before the inventory check,
+so use a trusted package source and an isolated build agent. The optional
+malicious-package and hash-manifest experiments were not performed.
 
 ### Push and pull-request automation
 
-A user-shared multibranch indexing log on 2026-10-18 showed:
-`assignment-work` had a Jenkinsfile and a build was scheduled;
-`main` had no Jenkinsfile; zero pull requests were processed.
-That scan result alone does not prove successful automatic push/PR builds.
+The #9 console says `Started by GitHub push`, so that event
+reached Jenkins. The build failed because Jenkins could not find Python.
+The later successful #10 build was started manually.
 
-The job's periodic scanning configuration is external to the repository.
-Periodic scans can combine several commits. A `githubPush()` declaration
-alone does not prove webhook delivery, especially to a local-only Jenkins.
-Capture both a push-triggered build and a PR-triggered build with their
-revision/cause, and resolve triggering if the “every push and PR” requirement
-is not met.
+The multibranch job is configured to discover branches and pull requests
+and to scan periodically. A pull-request build still needs to be saved.
+Save a successful automatic push build and a pull-request build, including
+the commit, reason the build started, and relevant job/webhook settings.
+Periodic scanning can combine several pushes, so it does not prove that
+every push caused a separate build.
 
-## Remaining work before claiming submission completion
+## Remaining work
 
-- [ ] Complete composition exploit evidence, runnable vulnerable code, corrected replay, and positive control.
-- [ ] Add reproducible CWE-862/CWE-89 experiment snapshots and new revision-linked output; preserve the historical logs and commits.
-- [ ] Correct batch failure propagation and demonstrate a blocking failure followed by a passing build.
-- [ ] Enforce and demonstrate rejection of unapproved dependencies/artifacts.
-- [ ] Save automatic push and PR build evidence and the relevant configuration.
-- [ ] Confirm CWE-20, CWE-862, and CWE-89 against the course's Brightspace catalogue; its contents were not available for this review.
-- [ ] Produce the final 2,000–2,500-word report; no final report is present in this repository.
-- [ ] Have the author review and finalize the AI-use declaration.
-- [ ] Recheck the final revision, evidence links, repository access, and full Git history.
+- [x] Original four-phase plan committed before the implementation commit.
+- [x] Three separate services, installed helper, user roles, and functional/permission tests.
+- [x] Runnable vulnerable version and saved results showing all four intended failures.
+- [x] Fixed comparison passes nine HTTP tests and one SQL test.
+- [x] Source/package reports and explanation of the false-positive warning.
+- [x] Build #10 finds Python through the Jenkins service PATH.
+- [x] Separate build commands and check every test-suite exit code in source.
+- [x] Add package/version approval and demonstrate acceptance and rejection locally.
+- [x] Separate test ports and pass two concurrent HTTP suites locally.
+- [x] Apply the same portable pipeline and test harness to all three working/comparison branches.
+- [ ] Run the updated pipeline in Jenkins, including a SQL-only failure demonstration.
+- [ ] Export full console/test reports for the latest success and a deliberately blocked build, with their commit and trigger.
+- [ ] Save successful automatic push and pull-request build evidence.
+- [ ] Confirm the three selected CWEs against the private Brightspace course catalogue.
+- [ ] Write the separate 2,000–2,500-word report with code/evidence references.
+- [ ] Review and finalize the AI-use declaration personally.
+- [ ] Commit/push final documents and check repository access, links, branches, and full Git history.
 
-The supplied assignment does not require Docker or Ollama specifically.
-The stub and unverified Compose configuration must be described honestly;
-they are separate from the outstanding experiment and CI requirements.
+A composition-only test would help separate its effect from the missing
+read check. [Design](Design.md) explains future production needs.

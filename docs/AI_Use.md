@@ -1,44 +1,49 @@
-# AI-use declaration — draft for author review
+# AI-use declaration
 
-AI assistance was used during development and documentation of this project.
-This draft must be reviewed by the submitting author and adjusted to match
-the assistance actually used and the work personally checked.
+ChatGPT/Codex was used for coding, explanations, tests, troubleshooting, and
+documentation. The following list describes that assistance.
 
 ## Assistance used
 
-- Discussing requirements, architecture, trust boundaries, secure design
-  principles, and the initial SSDLC plan.
-- Generating and explaining parts of the Django A/B/C implementation,
-  authentication, scoped JWTs, database access, helper package, and stub output.
-- Helping create setup/launch scripts, container configuration, and the initial
-  eight HTTP integration tests.
-- Helping add the composition regression (bringing the HTTP suite to nine)
-  and the focused SQL regression; troubleshooting Windows test cleanup.
-- Guiding Git branches/commits, vulnerability modifications, test execution,
-  evidence capture, and interpretation of results.
-- Helping write and troubleshoot the Jenkins pipeline, Windows Python path,
-  Bandit/pip-audit stages, credentials configuration, and multibranch setup.
-- Drafting and revising README, run/learning guides, design, verification,
-  requirements traceability, and this declaration.
-- Reviewing source, history, saved test/scan output, and the assignment during
-  the 2026-10-19 documentation review. That review identified incomplete
-  composition evidence, discrepancies between historical code snapshots and
-  experiment logs, and gaps in CI gates/automation claims.
+AI helped with:
 
-## Author actions and verification limits
+- Understanding the assignment, planning the three services, identifying
+  trust boundaries, and writing the first four-phase security plan.
+- Generating and explaining substantial parts of the Django code, login
+  checks, signed tokens, database access, helper package, and development
+  summary.
+- Creating setup/start scripts, optional container configuration, and the
+  first integration tests, which check several services working together.
+- Adding SQL and ownership tests and fixing Windows process/log cleanup
+  problems.
+- Preparing vulnerable code versions, managing branch/commit workflows,
+  collecting output, and interpreting vulnerable/fixed results.
+- Writing and troubleshooting Jenkins configuration, Python PATH,
+  Bandit/pip-audit steps, branch discovery, GitHub access, and triggers.
+- Drafting and revising the README, design/threat model, SSDLC plan,
+  requirement checklist, run/learning guides, results, and this declaration.
+- Checking explanations against code and saved results, identifying CI
+  issues, and rewriting documentation in plain English.
 
-The repository owner ran local commands/tests and vulnerability experiments,
-managed Git commits and GitHub/Jenkins setup, and supplied terminal and build
-output used in the discussion. A recorded Jenkins build includes nine passing
-HTTP tests and one passing SQL test.
+The assistance included generated code and text. It was more extensive than
+proofreading.
 
-Generated explanations and completion claims were checked against source and
-output where available. They were not all correct: the earlier claim that all
-four vulnerable effects had been demonstrated was contradicted by the saved
-composition log. [Verification](Verification.md) records the corrected status.
+## Work carried out
 
-No claim is made that the author has independently reviewed or understood
-every line, that every generated suggestion was accepted, or that AI assistance
-was limited to proofreading. The author must describe their own review,
-changes, understanding, and any additional AI use in the final declaration.
-The final report is not yet present in this repository.
+The repository owner ran commands, tests, security experiments, and Jenkins
+jobs, configured GitHub/Jenkins, managed commits, and supplied console logs
+and reports. The saved fixed reports contain nine passing HTTP tests and
+one passing SQL test. The newer vulnerable reports show the four expected
+test failures across those two suites.
+
+[Verification](Verification.md) contains the test results and known limitations.
+
+Before submitting, add a personal description of which code and results you
+checked, what you changed yourself, and any further AI use for the report.
+
+## Before submitting
+
+- Check that this list accurately describes the assistance used.
+- Add a personal account of code review, changes, and understanding.
+- Include any further AI use for the report or remaining implementation.
+- Check the course/university declaration requirements linked in the assignment.

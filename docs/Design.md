@@ -1,174 +1,283 @@
 # Architecture and security design
 
-This document describes the current prototype. Historical planning is
-preserved in commit `8e1b610`; current test evidence and gaps are in
-[Verification](Verification.md).
+Component A handles login and requests, component B processes alerts, and component C stores results.
+This guide explains how they work together and where permissions are checked.
+See [Verification](Verification.md) for test results and remaining work.
 
 ## Purpose and requirements
 
-The application validates a synthetic IDS alert, produces a labelled
-development summary, and stores it as a user-owned analysis. It is an API;
-account registration and a graphical interface are outside the chosen scope.
+The application accepts a test alert from an intrusion detection system
+(IDS), checks its contents, and stores a short analysis for the user who
+submitted it. It uses invented test data.
 
-| Functional requirement | Implementation |
+Users send HTTP requests to an application programming interface (API).
+There is no website with pages and buttons in this project. Registration
+and a graphical interface were left out to keep the project small.
+
+A *functional requirement* describes something the application must do.
+A *non-functional requirement* describes how it should behave, for example
+how it protects data or limits input size.
+
+| What the application must do | How it does it |
 |---|---|
-| Authenticate seeded users | A uses Django authentication and returns a signed JWT. |
-| Create an analysis through three components | A delegates to B; B validates/processes and submits to C. |
-| List/read protected results | A forwards scoped authority to C; ordinary users see their own results, admins may see all. |
-| Restricted operation | Only an administrator may delete a result. |
+| Check a user's login | Component A asks Django to check the username and password, then returns a signed login token. |
+| Create an analysis using all three services | Component A sends the alert to component B. Component B processes it and sends the result to component C for storage. |
+| List and read analyses | Ordinary users can access their own results. An administrator can access all results. |
+| Restrict deletion | Only an administrator may delete an analysis. |
 
 | Non-functional requirement | Control and limit |
 |---|---|
-| Confidentiality and authority integrity | Signed tokens and C's ownership checks; transport remains local HTTP. |
-| Bounded processing input | B limits compact UTF-8 alert JSON to 65,536 bytes; Django's request-body limit is 131,072 bytes. |
-| Repeatable setup | Requirements files, installable helper wheel, seed script, fresh test state; CI tooling and some resolved dependencies are not fully pinned. |
-| Safe handling of rejected requests | Explicit 400/401/403/404/413 responses for covered cases; negative-path coverage is not exhaustive. |
-| Separate responsibilities | Three HTTP processes with separate A/C databases; shared local OS user is not a sandbox. |
+| Confidentiality and permission integrity: protect private analyses and prevent unauthorized changes to token permissions. | Control: signed tokens identify the user and allowed action. Component C checks ownership and administrator access. Limit: local HTTP does not encrypt requests or responses. |
+| Bounded processing input: reject alerts above the processing size limit. | Control: component B checks the alert's compact JSON encoded as UTF-8. Limits: 65,536 bytes for the alert and a separate Django request-body limit of 131,072 bytes. These size checks do not prevent repeated requests. |
+| Repeatable setup: allow another developer to install and prepare the same application. | Control: requirements files specify package versions. The helper is installed as a wheel. Scripts prepare users and test data. Control in CI: `requirements-ci.txt` pins CI tools and their additional dependencies. The approval gate checks the full installed inventory. Limit: version checks do not verify package contents, and the basic local setup does not install every CI tool. |
+| Safe handling of rejected requests: return clear errors for invalid or unauthorized requests. | Control: request handlers return HTTP 400, 401, 403, 404, or 413 for the corresponding error cases. Limit: the tests do not cover every possible invalid request or unexpected error. |
+| Separate responsibilities: give each component a specific job and its own application permissions. | Control: component A, component B, and component C run separately. Component A and component C use different databases. Limit: all processes share one Windows account, so a compromised process may still access another component's files. |
+
+See [Terminology](Terminology.md) for short explanations of technical words.
 
 ## Components and interfaces
 
-| Component | Process and routes | Data and authority |
+A *process* is a running program. A *port* identifies a network listener on
+the computer, and a *route* identifies an operation within that service.
+For example, `http://127.0.0.1:8000/auth/token` sends a request to port
+8000 and route `/auth/token`. Here, `127.0.0.1` means this computer.
+
+| Service | Address and routes | What it does |
 |---|---|---|
-| A — application API | Port 8000; `/auth/token`, `/analyses`, `/analyses/{id}` | Django users in `.runtime/data/A/auth.sqlite`; signs tokens. |
-| B — processing | Port 8001; `/internal/analyze` | Validates the assigned alert, builds a stub result, forwards a limited C create token. |
-| C — resource service | Port 8002; `/internal/analyses`, `/internal/analyses/{id}` | Owns `.runtime/data/C/analyses.sqlite`; verifies authority and enforces resource access. |
+| Component A — application API | Port 8000, routes `/auth/token`, `/analyses`, `/analyses/{id}` | Checks logins using Django's user database, `.runtime/data/A/auth.sqlite`. Creates signed tokens and sends requests to component B or component C. |
+| Component B — processing service | Port 8001, route `/internal/analyze` | Checks the alert and produces a fixed development result. Sends the result to component C together with a token that component A created to permit storage of that analysis. |
+| Component C — storage service | Port 8002, routes `/internal/analyses`, `/internal/analyses/{id}` | Stores analyses in `.runtime/data/C/analyses.sqlite`. Checks the token and the user's permissions before allowing an operation. |
 
-All processes expose `/health`. The routes are selected by `SERVICE` in
-[urls.py](../app/urls.py). A and C's databases are storage, not extra
-application components. The same installed code is used by all processes.
+`{id}` is a placeholder for a specific analysis ID. The HTTP method also
+matters: GET reads, POST creates, and DELETE deletes. A route containing
+`internal` is intended for communication between services. That word
+does not protect the route. Token and permission checks protect it.
 
-The helper `alert-helper` is a separately built/installed Python wheel, not
-a fourth process. B uses it during processing; A and C also use its validators
-through the shared views. It executes with its importing process's permissions.
+All three services provide `/health` to show that they are running.
+[urls.py](../app/urls.py) chooses routes according to the `SERVICE`
+setting. The services use the same source files, but run in separate processes.
+Their database files are storage, not additional application services.
+
+The helper package, `alert-helper`, contains Python functions that check
+alert and result data. It is built as a wheel, which is an installable Python
+package file, and installed separately. Component B uses it when processing alerts.
+The shared views also use its checks in component A and component C. It runs inside each service
+that imports it, with that service's operating-system permissions.
 
 ## Create-analysis sequence
 
+Consider Alice submitting an alert. Component A creates an analysis ID and two tokens:
+one permits component B to process that alert. The other permits component C to store the result
+for Alice under that ID. Both tokens are signed by component A.
+
+Component B receives both tokens. It checks that they refer to the same user and
+analysis. After processing, component B sends the result and the storage token to component C.
+This is what “component B forwards a token” means: component B passes on component A's existing token.
+Component B does not create or change it.
+
 ```mermaid
 sequenceDiagram
-    actor User
-    participant A as A: API
-    participant B as B: Processor
-    participant C as C: Resource service
-    User->>A: POST /analyses + A user token + alert
-    A->>A: Verify token, validate alert, allocate analysis ID
-    A->>B: Alert + B execute token + C create token
-    B->>B: Verify both tokens, match subject/ID, enforce size, validate
-    B->>B: Produce development-stub result and validate schema
-    B->>C: POST document + C create token
-    C->>C: Verify token, validate document, store signed owner/ID
-    C-->>B: 201 stored analysis
-    B-->>A: 201 stored analysis
-    A-->>User: 201 stored analysis
+    actor Alice
+    participant A as Component A: Login and API
+    participant B as Component B: Processing
+    participant C as Component C: Storage
+    Alice->>A: Send alert and login token
+    A->>A: Check login token and choose analysis ID
+    A->>B: Alert, permission to process, permission to store
+    B->>B: Check tokens, matching user and ID, and input size
+    B->>B: Create development result and check its format
+    B->>C: Result and component A's token permitting storage
+    C->>C: Check token and store result for its signed user
+    C-->>B: 201: result created
+    B-->>A: Return created result
+    A-->>Alice: Return created result
 ```
 
-List/read/delete follow User → A → C, with responses returning through A.
-All operations are synchronous. There is no job queue or job-status API.
-Inter-service requests use connect/read timeouts; an error or timeout does
-not guarantee rollback of work already completed downstream.
+Listing, reading, and deleting use User → component A → component C. These requests do not need component B.
+
+The caller waits while the services finish, so the workflow is *synchronous*.
+There is no background queue. Network calls have time limits, but a timeout
+does not undo a result that component C has already stored.
 
 ## Authentication and authority binding
 
-A uses Django's seeded accounts and password authentication. The `admin`
-account has `is_staff=True`, which A maps to the application role `admin`.
-There is no custom cryptographic algorithm.
+*Authentication* checks who a user is. *Authorization* checks what that user
+may do. *Authority* means the permission granted to a user or service.
 
-[security.py](../app/security.py) issues RS256 JWTs and fixes RS256 during
-verification. It validates issuer `assignment-api`, signature, audience,
-required claims, expiry, scope, and allowed role. The views enforce
-resource-specific checks. Username/password authentication occurs at login;
-later requests present bearer tokens.
+At login, component A uses Django to check the password. The seeded `admin` account
+has `is_staff=True`, which this application treats as the administrator role.
 
-| Authority | Audience and scope | Resource/identity binding | Lifetime issued by A |
+Component A then returns a JSON Web Token (JWT): a text token containing signed fields.
+Those fields are called *claims*. [security.py](../app/security.py) uses
+the existing RS256 signing algorithm. Component A signs with a private key. Services
+check the signature with a public key. Signing lets them detect changes to
+the claims. It does not encrypt their contents.
+
+The token fields have these meanings:
+
+| Field | Meaning in this project |
+|---|---|
+| `iss` — issuer | Who issued the token: `assignment-api`. |
+| `aud` — audience | Which service may accept it: component A, component B, or component C. |
+| `sub` — subject | The user ID represented by the token. |
+| `scope` | The allowed action, such as `create` or `read`. |
+| `role` | Ordinary user or administrator. |
+| `analysis_id` | Which analysis the action concerns, where required. |
+| `iat` | When the token was issued. |
+| `exp` | When it expires. |
+| `jti` | A unique identifier for the token. |
+
+“Binding authority” means connecting permission to these specific values.
+For example, a token for component C to create Alice's analysis is not permission
+to delete a result or act for Bob.
+
+Component A issues the following tokens:
+
+| Token purpose | Service and allowed action | User and analysis restrictions | Valid for |
 |---|---|---|---|
-| Client token | `A`, `user` | Signed user `sub` and role | 900 seconds |
-| B execution | `B`, `execute` | Signed `sub` and newly allocated `analysis_id` | 600 seconds |
-| C create carried by B | `C`, `create` | Same `sub` and ID as B execution | 600 seconds |
-| C list/read/delete | `C`, corresponding action | Signed `sub`/role; read/delete additionally bind the requested ID | 60 seconds |
+| User sends requests to component A | Component A, action `user` | Identifies the logged-in user and role. | 900 seconds |
+| Component A asks component B to process an alert | Component B, action `execute` | Names the user and one analysis ID. | 600 seconds |
+| Component A permits component C to store a result and component B passes this token to component C | Component C, action `create` | Names the same user and analysis ID as the processing token. | 600 seconds |
+| Component A asks component C to list, read, or delete | Component C, the requested action | Identifies user/role. Read and delete also name one analysis ID. | 60 seconds |
 
-B verifies that the execute and create tokens name the same user and analysis.
-C derives the stored owner from `sub` and the ID from `analysis_id`.
-C checks the URL ID against the claim on read/delete and uses owner/admin
-checks for access. List operations filter by owner unless the role is admin.
+The services check the signature, issuer, intended service, expiration,
+required fields, action, and role. For read/delete, component C also checks that the
+analysis ID in the URL matches the token. Component C stores the owner from the
+verified `sub` field, rather than accepting an owner chosen in the request.
 
-A generates `iat`, `exp`, and `jti`. There is no token revocation or
-single-use-token registry: `jti` alone does not stop replay. C's primary key
-rejects a duplicate create ID.
+Tokens are sent using `Authorization: Bearer <token>`. “Bearer” names
+the authentication scheme: someone holding a valid token can present it.
+
+There is no system for cancelling a token before it expires or marking it
+as already used. A unique `jti` does not by itself stop someone sending
+the same token again. Component C does reject creation of a second record with the
+same analysis ID.
 
 ## Access matrix
 
-| Operation | Ordinary user | Administrator | B's C create token |
-|---|---|---|---|
-| Request analysis through A | Yes | Yes | No |
-| List/read results | Own | All | No |
-| Create stored result | Through A → B | Through A → B | Assigned ID and owner only |
-| Delete result | No | Yes | No |
+An access matrix lists who may perform each operation.
 
-A checks admin status before issuing delete authority. C independently checks
-the delete scope, resource claim, and admin role. [store.py](../app/store.py)
-uses parameterized queries; read ownership is checked there and listing is
-filtered there. Deletion's role/resource checks are in C's view, not inside
-`store.delete()`.
+| Operation | Ordinary user | Administrator | Caller using the token that permits storage in component C |
+|---|---|---|---|
+| Ask component A to create an analysis | Yes | Yes | No |
+| List or read results | Own results only | All results | No |
+| Store the result in component C | Through component A → component B → component C | Through component A → component B → component C | Only for the user and ID named in that token |
+| Delete a result | No | Yes | No |
+
+Component A checks the administrator role before issuing permission to delete.
+Component C checks that permission again. This protects component C even when it receives a
+request directly rather than through component A.
+
+[store.py](../app/store.py) checks ownership when reading and filters lists
+by owner. Its SQL queries use parameters, so supplied values are treated as
+data rather than SQL commands. The HTTP handler checks deletion permissions
+before calling `store.delete()`. The database function itself has no role check.
 
 ## Input, output, and trust boundaries
 
-The helper accepts an alert with `event_type=alert`, timezone-aware timestamp,
-valid IP addresses, nonblank protocol/signature, positive signature ID, and
-severity 1–3. Optional ports must be integers 0–65535. Extra alert fields are
-retained in the original document but excluded from the selected processing
-input.
+The helper checks the alert's event type, timestamp with time zone, IP
+addresses, protocol, signature text/ID, and severity. Optional network ports
+must be integers from 0 to 65535. Extra alert fields are kept in the original
+document but left out of the smaller input selected for processing.
 
-The result schema requires nonblank observation, interpretation, and
-uncertainty; nonempty lists of recommended actions and evidence fields; and
-evidence field names present in the selected alert. Schema checks do not prove
-semantic correctness. C stores ID and owner columns plus a JSON document
-containing original/selected input, model/prompt/settings metadata, timestamp,
-latency, and result.
+Component B produces a `development-stub` result. A *stub* is a simple replacement
+used during development: this one builds a fixed-format summary rather than
+calling a real AI model.
 
-Trust boundaries are client–A, A–B, A–C, and B–C. The installed helper is a
-code/dependency trust boundary inside each consuming process. Stub output is
-validated before storage; there is no external model boundary in the running
-prototype.
+The result must contain text fields for observation, interpretation, and
+uncertainty, plus nonempty lists of recommended actions and evidence fields.
+The evidence fields must refer to fields in the selected alert. These
+*schema checks* check the structure. They do not prove the explanation is true.
+Component C stores the original alert, selected fields, result, model information,
+creation time, and processing duration.
+
+A *trust boundary* is a point where one component receives data or requests
+from another source and must check them. The boundaries are between the client and component A, between component A
+and component B, between component A and component C, and between component B
+and component C. Installing the helper introduces another trust decision:
+its Python code runs inside the service that imports it.
 
 ## Assets and STRIDE
 
-| Threat | Asset | Control | Residual limit |
-|---|---|---|---|
-| Spoofing | User/service authority, tokens | RS256 signature and claims checks | Stolen bearer tokens are usable until expiry. |
-| Tampering | Ownership, queries, results | Signed owner/ID, parameterized SQL, document validation | Authorized content is not guaranteed to be factually correct. |
-| Repudiation | Record of actions | Ordinary server/test output | No dedicated audit trail or non-repudiation guarantee. |
-| Information disclosure | Per-user analyses | C's owner/admin enforcement and own-only lists | Local processes share OS-level file access. |
-| Denial of service | Processing/storage capacity | Size checks and request timeouts | No rate limits or general DoS guarantee; no measured resource-exhaustion experiment. |
-| Elevation of privilege | Admin/service authority | Scope, role, audience, and resource checks | Compromise of A's signing key compromises authority. |
+An *asset* is something that needs protection. The asset register lists
+those items and their protection needs.
 
-Only A is configured with a private-key path. All local processes run as the
-same OS user and can potentially access the same files. Compose declares
-separate key/database mounts but has not been runtime-verified. Do not claim
-that the local configuration contains arbitrary malicious package execution.
+| Asset | Where it is stored or used | Protection needed |
+|---|---|---|
+| User accounts, password hashes, and roles | Component A's Django database | Check passwords and control who can become an administrator. |
+| Alerts and analysis results | User-owned records in component C's database | Prevent unauthorized reads, changes of owner, and deletion. |
+| Private signing key | Component A's configured key file | Prevent others from issuing accepted tokens. |
+| Tokens passed between services | Client and component A, component B, and component C requests | Limit each token to the intended service, action, user, analysis, and time. |
+| Processing capacity | Component B's process | Limit input size. Request-rate limits are still needed. |
+| Helper and other installed packages | Python environment | Review packages and versions. The CI approval gate rejects an installed package or version outside the approved lists. |
+| Test results and release decisions | Reports, Jenkinsfile, Git history | Keep accurate results and make required failures stop a release. |
+
+STRIDE is a checklist of six types of security threats:
+
+| Threat type | What could go wrong here | Current protection | Remaining limitation |
+|---|---|---|---|
+| Spoofing — pretending to be someone else | An attacker presents false user/service permission. | Signed tokens and claim checks. | A stolen token can be used until it expires. |
+| Tampering — changing data | A caller changes ownership or makes input change an SQL query. | Owner from signed token, parameterized SQL, document checks. | Correct structure does not prove a result is factually correct. |
+| Repudiation — denying an action | A user denies performing an operation. | Ordinary server and test output. | No dedicated audit history proving who did what. |
+| Information disclosure — exposing private data | Bob reads Alice's analysis. | Component C's ownership checks and filtered lists. | Processes share the same Windows account and may access the same files. |
+| Denial of service — preventing normal use | Large or repeated requests consume capacity. | Size limits and network timeouts. | No rate limits or measured resource-exhaustion experiment. |
+| Elevation of privilege — gaining extra permission | A user deletes without being an administrator. | Checks of service, action, role, and analysis ID. | Anyone obtaining component A's private key could issue accepted tokens. |
+
+Only component A is configured with the private-key path. However, all local processes
+run under the same OS user. Windows may therefore let a compromised component B process
+read component A's key or component C's database directly. A *sandbox* would restrict this through
+operating-system permissions or similar isolation. Separate processes alone
+do not provide that restriction. The optional Compose configuration uses
+different mounts but has not yet been tested.
 
 ## Secure design principles
 
-| Principle | Design decision and implementation | Test/evidence |
+| Principle | Meaning and implementation | Test or other evidence |
 |---|---|---|
-| Complete mediation | C verifies each protected HTTP operation and applies owner/admin checks even for service requests. | `test_create_read_cross_user_and_admin`, `test_list_only_owned`, and direct-C deletion checks. |
-| Least privilege | B receives execute/create authority for one ID/user; create authority cannot delete. | `test_b_authority_cannot_delete` expects 403 and verifies the record remains. |
-| Fail-safe defaults | Missing/invalid authority is denied; request fields are allowlisted. | `test_forged_token`, `test_expired_and_wrong_audience`, `test_untrusted_owner_field_cannot_change_owner`. |
+| Complete mediation | Check permission every time a protected operation is requested. Component C checks tokens and resource permissions even for requests from another service. | `test_create_read_cross_user_and_admin`, `test_list_only_owned`, direct requests to component C in deletion tests. |
+| Least privilege | Give only the permission needed for the task. Component B receives tokens for one analysis. Permission to create in component C cannot be used to delete. | `test_b_authority_cannot_delete` expects 403 and checks that the record still exists. |
+| Fail-safe defaults | Reject requests unless they meet the rules. Invalid tokens and unexpected request fields are denied. | Forged/expired/wrong-service token tests and the untrusted-owner-field test. |
 
-These tests are in [test_flow.py](../tests/test_flow.py). A separate
-[SQL test](../tests/test_store_sql.py) checks parameterization directly.
-[Verification](Verification.md) distinguishes tested cases from untested paths.
+The tests are in [test_flow.py](../tests/test_flow.py) and
+[test_store_sql.py](../tests/test_store_sql.py).
+[Verification](Verification.md) describes their coverage and limits.
 
 ## Experiments and scope
 
-CWE-20, CWE-862, and CWE-89 have vulnerable/corrected logs. The cited CWE-862/
-CWE-89 snapshots need repair for reproducibility, as recorded in Verification.
-Composition/CWE-807
-has an implemented corrected control and commented variant, but its vulnerable
-evidence needs to be rerun successfully. See the
-[experiment guide](Vulnerability_Experiments_Guide.md).
+The runnable `vulnerable-version` at `5e58e8f` deliberately enables
+CWE-20, CWE-862, CWE-89, and the additional composition flaw, CWE-807.
+A CWE number names a category of software weakness. Saved tests show the
+four expected failures. The fixed comparison passes all ten tests.
+The [experiment guide](Vulnerability_Experiments_Guide.md) explains each one.
 
-The supplied assignment requires neither Ollama nor containers specifically.
-The chosen stub and separate-process execution meet those technology choices;
-they do not establish completion of the remaining experiment/CI requirements.
-Production operation would require transport security, stronger host isolation,
-key lifecycle management, audit/monitoring, backup/retention, and appropriate
-evaluation of any real analysis model.
+The composition flaw occurs when component C trusts a body field saying who owns the
+result, even though component A's signed token already identifies the authorized user.
+The test simulates component B having valid permission to create Alice's result and
+then trying to store it for Bob.
+
+The vulnerable comparison also disables read ownership checks. It shows
+the wrong owner being stored, but Bob's later successful read could also
+be explained by that separate missing check. The report must explain this
+limit instead of attributing the read only to the composition flaw.
+
+Separate local processes are sufficient for the assignment. Remaining CI
+work is listed in [Verification](Verification.md).
+
+## Production release and operation
+
+Before offering the application as a production service, it would need:
+
+- Encrypted connections using TLS, a production application server, and
+  suitable network restrictions.
+- Separate service accounts and file permissions so component B cannot read component A's
+  private key or component C's database.
+- A plan for replacing signing keys, cancelling stolen credentials, and
+  handling repeated use of tokens.
+- Request-rate limits, capacity controls, and a decision about retries.
+  Repeating a request after a timeout should not accidentally duplicate work.
+- Audit logs, monitoring, backups, data-retention rules, and recovery tests.
+- Package approval checks and Jenkins steps that reliably stop on every
+  required failure.
+- Evaluation of a real processing model if the development stub is replaced.
+
+These production features are not implemented.
