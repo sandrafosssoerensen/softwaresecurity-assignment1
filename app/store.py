@@ -26,14 +26,11 @@ def read(analysis_id, owner, admin):
     db = connection()
 
     try:
-        # CWE-89 vulnerable experiment:
-        # query = f"SELECT * FROM analyses WHERE id='{analysis_id}'"
-        # row = db.execute(query).fetchone()
-        row = db.execute("SELECT * FROM analyses WHERE id=?", (analysis_id,)).fetchone()
-        # CWE-862 vulnerable experiment:
-        # if row is None:
-        #     return None
-        if row is None or (not admin and row["owner"] != owner):
+        # Vulnerable-version snapshot for CWE-89: dynamic SQL construction.
+        query = f"SELECT * FROM analyses WHERE id='{analysis_id}'"
+        row = db.execute(query).fetchone()
+        # Vulnerable-version snapshot for CWE-862: no ownership check.
+        if row is None:
             return None
         return {"id": row["id"], "owner": row["owner"], **json.loads(row["document"])}
     finally:
