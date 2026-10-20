@@ -18,6 +18,8 @@ AI helped with:
   problems.
 - Preparing vulnerable code versions, managing branch/commit workflows,
   collecting output, and interpreting vulnerable/fixed results.
+- Adding a focused composition experiment with read ownership checks active,
+  running the fixed and isolated versions locally, and documenting the evidence.
 - Writing and troubleshooting Jenkins configuration, Python PATH,
   Bandit/pip-audit steps, branch discovery, GitHub access, and triggers.
 - Drafting and revising the README, design/threat model, SSDLC plan,

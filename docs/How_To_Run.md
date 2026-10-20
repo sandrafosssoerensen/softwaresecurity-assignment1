@@ -380,8 +380,9 @@ See [Verification](Verification.md#failure-propagation).
 
 ## 7. Vulnerability evidence
 
-Use the new [Jenkins comparison index](evidence/jenkins/README.md) as the
-primary evidence source:
+Use the [Jenkins comparison index](evidence/jenkins/README.md) for historical
+builds and the [isolated composition results](evidence/composition-isolated/README.md)
+for the additional local experiment:
 
 | Control | Vulnerable result | Fixed result |
 |---|---|---|
@@ -403,6 +404,19 @@ composition attempt. The newer vulnerable version can be run. See the
 [experiment guide](Vulnerability_Experiments_Guide.md) for the setup,
 code fixes, and limits on what each result proves when several flaws are
 active together.
+
+For the supplementary composition-only comparison, use
+`experiment-composition-isolated` and `fixed-version`. On each branch run:
+
+```powershell
+.\.venv\Scripts\python.exe tests\test_composition_isolated.py
+```
+
+The experimental version should fail with `201 != 400`, after confirming that
+Bob cannot read Alice's ordinary analysis. The fixed version should pass.
+The [isolated experiment guide](Composition_Isolation.md) contains the full
+branch-switching commands, observations, and source references. Return to
+`assignment-work` after the comparison.
 
 ## 8. Jenkins and CI/CD
 

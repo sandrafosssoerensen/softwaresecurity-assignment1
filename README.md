@@ -42,6 +42,7 @@ Responses return through the components that handled the request.
 | `assignment-work` | Corrected application and current documents | Jenkins build #10 succeeded at commit `d67a0c2` after Jenkins could find Python through PATH. |
 | `fixed-version` | Corrected version used for comparison | Ten HTTP tests and one direct SQL test pass. |
 | `vulnerable-version` | Version with four deliberately enabled security flaws | Four HTTP tests and one direct SQL test fail where they check the broken protections. |
+| `experiment-composition-isolated` | Supplementary experiment with only the composition flaw enabled | Nine ordinary HTTP tests pass and only the owner-field test fails. The focused comparison confirms that read ownership checks remain active. |
 
 The [evidence index](docs/evidence/jenkins/README.md) links the saved reports.
 Bandit finds unsafe SQL construction (B608/CWE-89) in the vulnerable version.
@@ -74,8 +75,10 @@ Component A and Component C. On the vulnerable branch, the GET experiment
 allows that input to reach the unsafe query. On the corrected branches, the
 ID format check rejects it before the query runs. The HTTP test uses Alice's
 own record, so it does not depend on the separate missing ownership check.
-The combined vulnerable version also disables read ownership checks, so the
-composition test's wrong-owner write is the clearest evidence of that flaw.
+The [isolated composition experiment](docs/Composition_Isolation.md) shows
+the wrong-owner write while read ownership checks remain active. Bob cannot
+read Alice's ordinary record, but he can read the new record wrongly assigned
+to him using a permission for Alice. The corrected version rejects that write.
 See the [experiment guide](docs/Vulnerability_Experiments_Guide.md) for inputs,
 code changes, and the corresponding test results.
 
@@ -244,6 +247,7 @@ repository root/
 | [Requirements traceability](docs/Requirements_Traceability.md) | Find which code and evidence address each assignment requirement |
 | [Verification](docs/Verification.md) | Check actual results, limits, and unfinished work |
 | [Vulnerability experiments](docs/Vulnerability_Experiments_Guide.md) | Understand and repeat the four security experiments |
+| [Isolated composition experiment](docs/Composition_Isolation.md) | Separate the wrong-owner write from the missing read ownership check |
 | [Implementation guide](docs/Implementation_Guide.md) | Learn how to rebuild the application step by step |
 | [AI-use declaration](docs/AI_Use.md) | Review how AI assistance was used |
 | [Jenkins evidence index](docs/evidence/jenkins/README.md) | Find saved reports and information about their source |

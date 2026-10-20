@@ -212,12 +212,19 @@ The saved results show:
 
 Use the `vulnerable-version` branch for the combined vulnerable version and
 the `fixed-version` branch for the corrected application. The current
-comparison commits are `a1928f4` and `1ccd085`. Some older attempts cannot
+comparison source commits are `a1928f4` and `10107b4`. Some older attempts cannot
 repeat their saved results unchanged. The experiment guide explains why.
 
 The combined version removes both owner-on-write and owner-on-read protections.
 Its wrong-owner response proves the incorrect write, but the later read does
 not isolate the composition flaw's effect. Keep that limit in your explanation.
+
+The [isolated composition guide](Composition_Isolation.md) provides the
+separate demonstration. On `experiment-composition-isolated`, read ownership,
+SQL parameters, and size limits remain active. Run
+`tests/test_composition_isolated.py` there and on `fixed-version`. The test
+shows Bob denied access to Alice's ordinary record, but able to read the new
+record incorrectly stored for him. The corrected version rejects that write.
 
 ## 8. Understand and finish the CI gates
 

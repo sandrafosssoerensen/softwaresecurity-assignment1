@@ -67,6 +67,9 @@ The vulnerable version has all four flaws together. Its response proves
 that a result was stored for the wrong owner. Bob's successful read could
 also be caused by the missing read owner check. See
 [the experiment guide](../../Vulnerability_Experiments_Guide.md) for that limit.
+The newer [isolated local comparison](../composition-isolated/README.md)
+demonstrates the composition flaw with normal read ownership checks active.
+It supplements these historical Jenkins reports.
 
 ## Console logs
 

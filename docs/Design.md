@@ -262,10 +262,13 @@ payload reaches its deliberately unsafe query. The corrected branches keep
 the format check and use a parameterized query. The test requests Alice's own
 record, which isolates SQL behavior from the separate ownership experiment.
 
-The vulnerable comparison also disables read ownership checks. It shows
-the wrong owner being stored, but Bob's later successful read could also
-be explained by that separate missing check. The report must explain this
-limit instead of attributing the read only to the composition flaw.
+The combined vulnerable comparison also disables read ownership checks.
+Its later read alone cannot distinguish the two ownership flaws. The
+[isolated composition experiment](Composition_Isolation.md) keeps those read
+checks active. Bob is denied access to Alice's ordinary record, but can read
+the new record incorrectly stored for him using Alice's create permission.
+Alice cannot read that new record. This shows the ownership error at creation
+while the normal owner-based read rule continues to work.
 
 Separate local processes are sufficient for the assignment. Remaining CI
 work is listed in [Verification](Verification.md).

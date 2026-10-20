@@ -37,7 +37,9 @@ the test for untrusted ownership was added later.
 | `test_forged_token` | Component A rejects a JWT whose signature was changed. |
 | `test_size_limit_direct_b` | Component B rejects a validly authenticated request containing 66,000 padding characters with 413. |
 | `test_untrusted_owner_field_cannot_change_owner` | Component C rejects an extra owner field with 400. Bob then gets 404 for that uncreated record. |
+| `test_sql_injection_via_api_does_not_return_a_record` | Normal reads work, but an injected analysis ID is rejected with 400 through Component A. |
 | `test_injected_analysis_id_does_not_return_a_record` | The storage query treats the SQL payload as a value and returns `None`. |
+| Supplementary `test_delegated_create_cannot_assign_another_owner` | The focused composition comparison checks normal read ownership, delegated creation, and later reads through Component A. It is run separately from the ten-test HTTP suite. |
 
 The test setup logs in all three users. These tests do not check every
 possible invalid password, missing token field, malformed request, wrong
@@ -53,7 +55,7 @@ results. Older per-CWE logs are also kept for reference.
 | CWE-20: missing size check | Oversized input is accepted: 201 instead of 413. | The test passes by receiving 413. | [Vulnerable HTTP](evidence/jenkins/vulnerable-version/build-4/test_flow.txt), [fixed HTTP](evidence/jenkins/fixed-version/build-4/test_flow.txt) |
 | CWE-862: missing owner check | Bob reads Alice's result: 200 instead of 404. | Bob is denied, while Alice and admin can read. | Same HTTP reports |
 | CWE-89: SQL built from input text | The direct SQL test returns `known-analysis`, and the HTTP test returns Alice's selected record for the injected ID. | The direct SQL test returns no record, and the HTTP route rejects the malformed ID with 400. | [Vulnerable SQL](evidence/jenkins/vulnerable-version/build-4/test_store_sql.txt), [fixed SQL](evidence/jenkins/fixed-version/build-4/test_store_sql.txt), [current local HTTP](evidence/local-ci-fixes/vulnerable-test_flow-current.txt) |
-| Composition/CWE-807: request body chooses owner | A token permitting creation for Alice is used with Bob as body owner. Component C returns 201 and owner `2`. Bob reads with 200. | Component C rejects the owner field with 400, then returns 404 for the read. Normal create/read still works. | Same HTTP reports |
+| Composition/CWE-807: request body chooses owner | With read ownership checks active, a token permitting creation for Alice is used with Bob as body owner. Component C returns 201 and owner `2`. Alice's later read is 404 and Bob's is 200. | Component C rejects the owner field with 400. No record is created, so later reads return 404. Normal create/read still works. | [Isolated comparison](evidence/composition-isolated/README.md) |
 
 The size test shows acceptance of large input. It does not measure CPU or
 memory exhaustion. CWE-89 now has both a direct storage regression and an
@@ -63,20 +65,27 @@ the query, and the HTTP test uses Alice's own record rather than another
 user's record.
 
 The composition test creates tokens with the lab private key to simulate
-component B's legitimate permission to store an analysis for Alice. It does not show
-an ordinary client obtaining that signing key. The vulnerable comparison
-also removes read ownership checking. The response proves that the wrong
-owner was stored. Bob's later read does not by itself distinguish the
-composition flaw from the missing read check. A test with only the
-composition flaw enabled would give stronger evidence of its separate effect.
+Component B's legitimate permission to store an analysis for Alice. It does
+not show an ordinary client obtaining that signing key. The combined
+`vulnerable-version` also removes read ownership checking, which limits how
+its later read result can be interpreted.
+
+The supplementary [isolated comparison](Composition_Isolation.md) keeps read
+ownership checks active. Bob gets 404 for Alice's ordinary record, but the
+same user can read the new record wrongly assigned to him using Alice's
+create permission. Alice receives 404 for that new record. This isolates the
+incorrect ownership assignment from the separate CWE-862 flaw. Only the
+owner-field test fails in the isolated version's ten-test HTTP suite. The
+direct SQL test and all six dependency-gate tests pass on both versions.
 
 ## Git references
 
 | Work | Reference |
 |---|---|
 | Original plan/design, followed by first implementation | `8e1b610`, then `7f04cee`. |
-| Corrected application used for comparison | Current `fixed-version` commit `1ccd085`. Historical Jenkins evidence used `e3378c6`. |
+| Corrected application used for comparison | `fixed-version` source at `10107b4`, including the focused composition test. Historical Jenkins evidence used `e3378c6`. |
 | Runnable version with all four flaws | Current `vulnerable-version` commit `a1928f4`. Historical Jenkins evidence used `5e58e8f`. |
+| Isolated composition experiment | `experiment-composition-isolated` source at `c43ebf8`. Only the create handler differs from `10107b4`. |
 | Jenkins change to find Python through PATH | `d67a0c2`. |
 | Older individual experiments | `37e5f96` / `dd2643a` (CWE-20), `185aada` / `3e3f7f6` (CWE-862), `37646f2` / `a7039b4` (CWE-89), `96fb053` / `718aee3` (composition). |
 
@@ -206,6 +215,7 @@ every push caused a separate build.
 - [x] Add package/version approval and demonstrate acceptance and rejection locally.
 - [x] Separate test ports and pass two concurrent HTTP suites locally.
 - [x] Apply the same portable pipeline and test harness to all three working/comparison branches.
+- [x] Demonstrate the composition flaw alone with read ownership checks active and save both comparison runs.
 - [ ] Run the updated pipeline in Jenkins, including a SQL-only failure demonstration.
 - [ ] Export full console/test reports for the latest success and a deliberately blocked build, with their commit and trigger.
 - [ ] Save successful automatic push and pull-request build evidence.
@@ -214,5 +224,6 @@ every push caused a separate build.
 - [ ] Review and finalize the AI-use declaration personally.
 - [ ] Commit/push final documents and check repository access, links, branches, and full Git history.
 
-A composition-only test would help separate its effect from the missing
-read check. [Design](Design.md) explains future production needs.
+The [isolated composition results](evidence/composition-isolated/README.md)
+are supplementary local evidence. [Design](Design.md) explains future
+production needs.
