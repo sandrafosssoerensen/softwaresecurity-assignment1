@@ -137,11 +137,10 @@ def analyze(request):
     data = body(request, {"alert", "storage_token"})
     encoded = json.dumps(data["alert"], ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 
-    # CWE-20 vulnerable experiment: temporarily comment out the active check.
+    # CWE-20 vulnerable-version experiment: the input-size check is disabled.
+    # The fixed-version branch keeps this validation enabled.
     # if len(encoded) > 65536:
     #     raise ApiError(413, "INPUT_TOO_LARGE")
-    if len(encoded) > 65536:
-        raise ApiError(413, "INPUT_TOO_LARGE")
     
     selected = select_alert(data["alert"])
     target = verify(data["storage_token"], "C", "create")
