@@ -177,6 +177,8 @@ def stored_analyses(request, analysis_id=None):
     claims = authority(request, "C", scopes[request.method])
 
     if analysis_id:
+        # CWE-89 HTTP experiment: the vulnerable branch skips this check
+        # for GET only. Keep it enabled in the corrected versions.
         UUID(analysis_id)
         if claims.get("analysis_id") != analysis_id:
             raise ApiError(403, "RESOURCE_MISMATCH")
