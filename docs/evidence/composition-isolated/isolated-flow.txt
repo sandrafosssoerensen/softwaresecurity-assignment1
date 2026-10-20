@@ -1,0 +1,30 @@
+test_b_authority_cannot_delete (__main__.FlowTests.test_b_authority_cannot_delete) ... ok
+test_create_read_cross_user_and_admin (__main__.FlowTests.test_create_read_cross_user_and_admin) ... ok
+test_delete_role_and_positive_control (__main__.FlowTests.test_delete_role_and_positive_control) ... ok
+test_expired_and_wrong_audience (__main__.FlowTests.test_expired_and_wrong_audience) ... ok
+test_forged_token (__main__.FlowTests.test_forged_token) ... ok
+test_invalid_signature_and_unknown_owner (__main__.FlowTests.test_invalid_signature_and_unknown_owner) ... ok
+test_list_only_owned (__main__.FlowTests.test_list_only_owned) ... ok
+test_size_limit_direct_b (__main__.FlowTests.test_size_limit_direct_b) ... ok
+test_sql_injection_via_api_does_not_return_a_record (__main__.FlowTests.test_sql_injection_via_api_does_not_return_a_record) ... ok
+test_untrusted_owner_field_cannot_change_owner (__main__.FlowTests.test_untrusted_owner_field_cannot_change_owner) ... FAIL
+
+======================================================================
+FAIL: test_untrusted_owner_field_cannot_change_owner (__main__.FlowTests.test_untrusted_owner_field_cannot_change_owner)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\sandr\Desktop\3.SemesterKandidat\3semestercomputerscience\SS\Assignment 1\software-security-v1\software-security-v1\.runtime\worktrees\composition-isolated\tests\test_flow.py", line 190, in test_untrusted_owner_field_cannot_change_owner
+    self.assertEqual(
+AssertionError: Tuples differ: (201, 200) != (400, 404)
+
+First differing element 0:
+201
+400
+
+- (201, 200)
++ (400, 404) : create={"id": "d9a3a06e-e901-4130-a2ca-2f5e5c4efd29", "owner": "2", "original_alert": {"event_type": "alert", "timestamp": "2026-10-13T10:00:00Z", "src_ip": "192.0.2.10", "dest_ip": "192.0.2.20", "proto": "TCP", "src_port": 42000, "dest_port": 443, "alert": {"signature_id": 9000001, "signature": "Synthetic lab alert for testing", "severity": 2}}, "model_input": {"event_type": "alert", "timestamp": "2026-10-13T10:00:00Z", "src_ip": "192.0.2.10", "dest_ip": "192.0.2.20", "proto": "TCP", "alert": {"signature_id": 9000001, "signature": "Synthetic lab alert for testing", "severity": 2}, "src_port": 42000, "dest_port": 443}, "model": "development-stub", "prompt_version": "stub-v1", "settings": {}, "latency_seconds": 0.0, "created_at": "2026-10-20T20:48:13.968246+00:00", "result": {"observation": "The alert reports: Synthetic lab alert for testing", "interpretation": "Development stub: no real model interpretation has been performed.", "uncertainty": "This alert alone does not establish attack success.", "recommended_actions": ["Have an analyst review the alert and supporting network evidence."], "evidence_fields": ["alert.signature"]}, "owner_id": "2"}; bob_read={"id": "d9a3a06e-e901-4130-a2ca-2f5e5c4efd29", "owner": "2", "original_alert": {"event_type": "alert", "timestamp": "2026-10-13T10:00:00Z", "src_ip": "192.0.2.10", "dest_ip": "192.0.2.20", "proto": "TCP", "src_port": 42000, "dest_port": 443, "alert": {"signature_id": 9000001, "signature": "Synthetic lab alert for testing", "severity": 2}}, "model_input": {"event_type": "alert", "timestamp": "2026-10-13T10:00:00Z", "src_ip": "192.0.2.10", "dest_ip": "192.0.2.20", "proto": "TCP", "alert": {"signature_id": 9000001, "signature": "Synthetic lab alert for testing", "severity": 2}, "src_port": 42000, "dest_port": 443}, "model": "development-stub", "prompt_version": "stub-v1", "settings": {}, "latency_seconds": 0.0, "created_at": "2026-10-20T20:48:13.968246+00:00", "result": {"observation": "The alert reports: Synthetic lab alert for testing", "interpretation": "Development stub: no real model interpretation has been performed.", "uncertainty": "This alert alone does not establish attack success.", "recommended_actions": ["Have an analyst review the alert and supporting network evidence."], "evidence_fields": ["alert.signature"]}, "owner_id": "2"}
+
+----------------------------------------------------------------------
+Ran 10 tests in 29.697s
+
+FAILED (failures=1)
