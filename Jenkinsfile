@@ -8,7 +8,9 @@ pipeline {
     }
 
     environment {
-        PYTHON = "C:\\Users\\sandr\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
+        // Resolve Python from the Jenkins agent's PATH instead of using a
+        // developer-specific installation path.
+        PYTHON = "python"
         CI_PYTHON = ".jenkins-venv\\Scripts\\python.exe"
         REPORT_DIR = "reports"
     }
@@ -28,6 +30,8 @@ pipeline {
         stage("Build") {
             steps {
                 bat """
+                    where %PYTHON%
+                    %PYTHON% --version
                     if not exist %REPORT_DIR% mkdir %REPORT_DIR%
                     %PYTHON% -m venv .jenkins-venv
                     %CI_PYTHON% -m pip install --upgrade pip
