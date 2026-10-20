@@ -186,12 +186,15 @@ def stored_analyses(request, analysis_id=None):
     admin = claims["role"] == "admin"
 
     if request.method == "POST":
-        document = body(request, {"original_alert", "model_input", "model", "prompt_version", "settings",
-                                          "latency_seconds", "created_at", "result"})
-        
-        # CWE-807 vulnerable experiment: accept an untrusted owner_id field.
-        # document = body(request, {"original_alert", "model_input", "model", "prompt_version", "settings",
-        #                           "latency_seconds", "created_at", "result", "owner_id"})
+        # Isolated CWE-807 experiment: only trust in the body owner changes.
+        # Read ownership, SQL parameters, UUID checks, and size limits stay active.
+        required_fields = {"original_alert", "model_input", "model", "prompt_version", "settings",
+                           "latency_seconds", "created_at", "result"}
+        if request.content_type != "application/json":
+            raise ApiError(400, "EXPECTED_JSON")
+        document = json.loads(request.body)
+        if not isinstance(document, dict) or set(document) not in (required_fields, required_fields | {"owner_id"}):
+            raise ApiError(400, "INVALID_FIELDS")
         selected = select_alert(document["original_alert"])
 
         if document["model_input"] != selected:
@@ -199,11 +202,9 @@ def stored_analyses(request, analysis_id=None):
         
         validate_result(document["result"], selected)
         UUID(claims["analysis_id"])
-        store.create(claims["analysis_id"], claims["sub"], document)
-
-        # CWE-807 vulnerable experiment: trust owner_id instead of the token claim.
-        # store.create(claims["analysis_id"], document["owner_id"], document)
-        return JsonResponse({"id": claims["analysis_id"], "owner": claims["sub"], **document}, status=201)
+        owner = document.get("owner_id", claims["sub"])
+        store.create(claims["analysis_id"], owner, document)
+        return JsonResponse({"id": claims["analysis_id"], "owner": owner, **document}, status=201)
     
     if request.method == "GET" and analysis_id is None:
         return JsonResponse({"analyses": store.listing(claims["sub"], admin)})
