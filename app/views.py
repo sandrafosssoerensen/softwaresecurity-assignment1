@@ -176,7 +176,10 @@ def stored_analyses(request, analysis_id=None):
     claims = authority(request, "C", scopes[request.method])
 
     if analysis_id:
-        UUID(analysis_id)
+        # CWE-89 HTTP experiment: let read input reach the unsafe SQL.
+        # Keep UUID checks for deletion and the existing create path.
+        if request.method != "GET":
+            UUID(analysis_id)
         if claims.get("analysis_id") != analysis_id:
             raise ApiError(403, "RESOURCE_MISMATCH")
         
