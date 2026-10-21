@@ -3,9 +3,9 @@
 Saved reports from the corrected and vulnerable versions, with a short
 explanation of the results.
 
-## Current build evidence locations
+## Saved build evidence locations
 
-The following folders contain the current Jenkins exports. Each completed
+The following folders contain selected Jenkins exports. Each completed
 build folder includes its console output, generated reports, and a README that
 explains the result.
 
@@ -31,12 +31,12 @@ report, and complete console output.
 
 | Folder | HTTP tests | SQL test | Bandit | Package audit |
 |---|---|---|---|---|
-| [main/build-1](main/build-1/) | 10 pass | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
-| [assignment-work/build-13](assignment-work/build-13/) | 10 pass | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
-| [fixed-version/build-6](fixed-version/build-6/) | 10 pass | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
+| [main/build-1](main/build-1/) | 10 pass | 1 pass | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
+| [assignment-work/build-13](assignment-work/build-13/) | 10 pass | 1 pass | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
+| [fixed-version/build-6](fixed-version/build-6/) | 10 pass | 1 pass | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
 | [vulnerable-version/build-5](vulnerable-version/build-5/) | 6 pass, 4 fail | 1 fails | B608: 1 medium warning, B105: 1 low warning | No known vulnerabilities, dependency approval passes |
-| [experiment-composition-isolated/build-1](experiment-composition-isolated/build-1/) | 9 pass, 1 composition failure | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
-| [pull-request/pr-1-build-1](pull-request/pr-1-build-1/) | 10 pass | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
+| [experiment-composition-isolated/build-1](experiment-composition-isolated/build-1/) | 9 pass, 1 composition failure | 1 pass | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
+| [pull-request/pr-1-build-1](pull-request/pr-1-build-1/) | 10 pass | 1 pass | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
 
 ## Code versions used to understand the comparison
 

@@ -211,9 +211,10 @@ The saved results show:
   the result for Bob. Corrected component C rejects the body owner.
 
 Use the `vulnerable-version` branch for the combined vulnerable version and
-the `fixed-version` branch for the corrected application. The current
-comparison source commits are `a1928f4` and `10107b4`. Some older attempts cannot
-repeat their saved results unchanged. The experiment guide explains why.
+the `fixed-version` branch for the corrected application. Their current heads
+are `7b082c2` and `25f56d6`. The local comparison evidence was produced from
+source commits `a1928f4` and `10107b4`. Some older attempts cannot repeat their
+saved results unchanged. The experiment guide explains why.
 
 The combined version removes both owner-on-write and owner-on-read protections.
 Its wrong-owner response proves the incorrect write, but the later read does

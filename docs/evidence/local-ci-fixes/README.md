@@ -94,16 +94,17 @@ wheel in a later command encountered a Windows file-permission error.
 For the clean local environment, `pip install --no-deps --no-build-isolation ./helper`
 successfully built and installed the helper through pip's temporary wheel.
 Current successful Jenkins builds passed the normal explicit wheel-build and
-installation steps. Their complete console exports are still pending.
+installation steps. Their complete console exports and generated reports are
+stored in the neighbouring `jenkins` folder.
 
 ## Relationship to the current Jenkins runs
 
 Jenkins has now displayed successful current builds for `main`,
 `assignment-work`, and `fixed-version`. It has also displayed blocked builds
-for `vulnerable-version` and `experiment-composition-isolated`. Their complete
-console logs and artifacts still need to be copied into the placeholders in
-the neighbouring `jenkins` folder. A pull-request build also remains to be
-demonstrated.
+for `vulnerable-version` and `experiment-composition-isolated`. The
+neighbouring `jenkins` folder contains their complete console logs and
+artifacts. It also contains the successful pull-request build and screenshots
+of the separate branch and `pr-head` checks.
 
 The inventory gate checks package names and versions after installation.
 It does not verify package contents or isolate installation scripts.

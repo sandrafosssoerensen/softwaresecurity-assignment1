@@ -34,7 +34,7 @@ Use the directory containing `manage.py`, `Jenkinsfile`, and
 For a fresh clone (requires access to the private repository):
 
 ```powershell
-git clone --branch assignment-work https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git
+git clone --branch main https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git
 cd softwaresecurity-assignment1
 ```
 
@@ -382,7 +382,7 @@ See [Verification](Verification.md#failure-propagation).
 
 ## 7. Vulnerability evidence
 
-Use the [Jenkins comparison index](evidence/jenkins/README.md) for historical
+Use the [Jenkins comparison index](evidence/jenkins/README.md) for the saved
 builds and the [isolated composition results](evidence/composition-isolated/README.md)
 for the additional local experiment:
 
@@ -393,11 +393,9 @@ for the additional local experiment:
 | CWE-89 SQL | The HTTP injection request returns Alice's selected record, and the direct SQL test also returns a record. | The HTTP route rejects the malformed ID with 400, and the direct SQL test treats the payload as data. |
 | Composition/CWE-807 | Token permitting creation for Alice is used to store owner 2 (Bob). Bob reads with 200. | Request owner field is rejected with 400. Later read is 404. |
 
-The current local fixed run passes ten HTTP tests and one direct SQL test. The
-current local vulnerable run has four HTTP failures and one SQL failure. The
-older Jenkins archive contains nine HTTP tests because it predates the new API
-SQL test. Bandit detects
-the unsafe SQL construction (B608). Both scans also warn about `Bearer`
+The current fixed Jenkins run passes ten HTTP tests and one direct SQL test.
+The current vulnerable Jenkins run has four HTTP failures and one SQL failure.
+Bandit detects the unsafe SQL construction (B608). Both scans also warn about `Bearer`
 (B105). That warning is a false positive: the word names the token scheme,
 not a secret password.
 
