@@ -39,9 +39,9 @@ Responses return through the components that handled the request.
 
 | Branch | Purpose | Current verification result |
 |---|---|---|
-| `assignment-work` | Corrected application and current documents | Ten HTTP tests and one direct SQL test pass. Jenkins displayed build #12 as successful. |
+| `assignment-work` | Corrected application and current documents | Ten HTTP tests and one direct SQL test pass. Jenkins build #13 succeeded. |
 | `fixed-version` | Corrected version used for comparison | Ten HTTP tests and one direct SQL test pass. Jenkins displayed build #6 as successful. |
-| `main` | Corrected release branch | Jenkins displayed build #1 as successful. |
+| `main` | Corrected release branch | The automatic post-merge Jenkins build succeeded. |
 | `vulnerable-version` | Version with four deliberately enabled security flaws | Four HTTP tests and one direct SQL test fail where they check the broken protections. Jenkins build #5 is blocked as intended. |
 | `experiment-composition-isolated` | Supplementary experiment with only the composition flaw enabled | Nine ordinary HTTP tests pass and only the owner-field test fails. Jenkins build #1 is blocked as intended. |
 
@@ -92,7 +92,7 @@ Run commands in the folder containing `manage.py`, `Jenkinsfile`, and
 For a fresh clone, with access to the private repository:
 
 ```powershell
-git clone --branch assignment-work https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git
+git clone --branch main https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git
 cd softwaresecurity-assignment1
 ```
 

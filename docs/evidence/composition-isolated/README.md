@@ -2,8 +2,8 @@
 
 The [experiment explanation](../../Composition_Isolation.md) describes the
 scenario, assumptions, and exact commands. These files contain local test
-output from Python 3.12.10. They are supplementary evidence alongside the
-historical Jenkins archives.
+output from Python 3.12.10. They supplement the current Jenkins branch and
+pull-request evidence.
 
 | Version | Source commit | Dependency gate | Direct SQL | Ordinary HTTP suite | Focused composition test |
 |---|---|---|---|---|---|

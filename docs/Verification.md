@@ -2,8 +2,8 @@
 
 The saved Jenkins comparison passes ten application tests on the fixed
 version and fails four on the vulnerable version. The updated local suite
-also passes six dependency-gate tests. This page distinguishes historical
-Jenkins reports, current Jenkins results, and local CI checks.
+also passes six dependency-gate tests. This page distinguishes saved Jenkins
+results, local comparisons, and local CI checks.
 
 Read [Terminology](Terminology.md) for unfamiliar test and CI terms.
 
@@ -81,9 +81,9 @@ direct SQL test and all six dependency-gate tests pass on both versions.
 | Work | Reference |
 |---|---|
 | Original plan/design, followed by first implementation | `8e1b610`, then `7f04cee`. |
-| Corrected application used for comparison | `fixed-version` source at `10107b4`, including the focused composition test. Historical Jenkins evidence used `e3378c6`. |
-| Runnable version with all four flaws | Current `vulnerable-version` commit `a1928f4`. Historical Jenkins evidence used `5e58e8f`. |
-| Isolated composition experiment | `experiment-composition-isolated` source at `c43ebf8`. Only the create handler differs from `10107b4`. |
+| Corrected application used for comparison | Current `fixed-version` head `25f56d6`. The local focused comparison used source commit `10107b4`. |
+| Runnable version with all four flaws | Current `vulnerable-version` head `7b082c2`. The local comparison used source commit `a1928f4`. |
+| Isolated composition experiment | Current branch head `07708b5`. The local isolated comparison used source commit `c43ebf8`, which differs from corrected source `10107b4` only in the create handler. |
 | Jenkins change to find Python through PATH | `d67a0c2`. |
 | Older individual experiments | `37e5f96` / `dd2643a` (CWE-20), `185aada` / `3e3f7f6` (CWE-862), `37646f2` / `a7039b4` (CWE-89), `96fb053` / `718aee3` (composition). |
 
@@ -104,11 +104,12 @@ git show 8e1b610:docs/SSDLC_Plan.md
 The [evidence index](evidence/jenkins/README.md) distinguishes saved reports,
 local verification, current build folders, and build provenance.
 
-The current multibranch evidence contains successful builds for
+The saved multibranch evidence contains successful builds for
 assignment-work #13, fixed-version #6, and main #1. Vulnerable-version #5 and the isolated
 composition build #1 were blocked as intended. Their console logs, artifacts,
 commits, and build causes are represented by the corresponding folders in the
-evidence index.
+evidence index. Jenkins also automatically built the merged `main` revision
+successfully.
 
 ### Scanner findings and release policy
 
@@ -210,7 +211,7 @@ are stored with the repository evidence.
 - [x] Runnable vulnerable version and saved results showing all four intended failures.
 - [x] Fixed comparison passes ten HTTP tests and one direct SQL test.
 - [x] Source/package reports and explanation of the false-positive warning.
-- [x] Build #10 finds Python through the Jenkins service PATH.
+- [x] Current Jenkins builds find Python through the Jenkins service PATH.
 - [x] Separate build commands and check every test-suite exit code in source.
 - [x] Add package/version approval and demonstrate acceptance and rejection locally.
 - [x] Separate test ports and pass two concurrent HTTP suites locally.
