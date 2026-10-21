@@ -101,5 +101,6 @@ git diff 10107b4 c43ebf8 -- app/views.py app/store.py
 The focused test supplements the existing HTTP suite. The Jenkinsfile already
 runs the ordinary HTTP suite, whose owner-field test fails on the isolated
 experimental branch. The focused test is run separately for this investigation.
-The [saved evidence](evidence/composition-isolated/README.md) is from local
-runs. A Jenkins run must be exported separately if it is used in the report.
+The [saved evidence](evidence/composition-isolated/README.md) records the local
+focused comparison. Jenkins evidence is indexed separately under
+`docs/evidence/jenkins/`.

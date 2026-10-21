@@ -4,7 +4,7 @@ Use this guide to practise rebuilding the application in a separate folder.
 It explains what to implement first and how the pieces fit together.
 
 To run the existing project, use [How to run](How_To_Run.md).
-For unfinished work, see [Verification](Verification.md).
+[Verification](Verification.md) records test results and limitations.
 [Terminology](Terminology.md) explains technical words.
 
 ## 1. Understand the scope before coding
@@ -229,7 +229,7 @@ record incorrectly stored for him. The corrected version rejects that write.
 ## 8. Understand and finish the CI gates
 
 Read the `Jenkinsfile` and
-[Verification](Verification.md#jenkins-evidence-and-gaps).
+[Verification](Verification.md#jenkins-evidence).
 
 Jenkins runs package installation, helper build, source checks, package
 advisory checks, tests, and report saving. A gate is a rule that makes the
@@ -238,8 +238,9 @@ build fail when a required check fails.
 Build commands use separate Jenkins steps. The test stage checks all three
 suite exit codes. The dependency gate checks the approved installed inventory,
 and HTTP tests use separately allocated ports. Local tests verify the gate
-and concurrent HTTP runs. New Jenkins runs and complete automatic
-push/pull-request evidence still need to be saved.
+and concurrent HTTP runs. Current Jenkins runs show successful corrected
+branches and deliberately blocked vulnerable branches. The Jenkins evidence
+index distinguishes build results, trigger provenance, and local checks.
 
 The current Jenkinsfile uses `python` from the Windows service PATH.
 The console shows its path and version. Check these before investigating
@@ -247,15 +248,11 @@ application errors.
 
 ## 9. Explain and hand over the result
 
-Use the [report source map](Requirements_Traceability.md#report-source-map).
-Explain the application purpose, service boundaries, flow of permission,
-three principles, four experiments, observed tests/scans, security gates,
-remaining limits, and production needs.
+The [report source map](Requirements_Traceability.md#report-source-map) links
+the application purpose, service boundaries, permission flow, three
+principles, four experiments, observed tests and scans, security gates,
+limitations, and production needs.
 
 For each function, identify its inputs, what is trusted, what is rejected,
 what changes it makes, and which test checks it. Practise explaining it
 without reading the code.
-
-Use the
-[completion checklist](Verification.md#remaining-work)
-for actual unfinished work.

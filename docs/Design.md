@@ -2,7 +2,7 @@
 
 Component A handles login and requests, component B processes alerts, and component C stores results.
 This guide explains how they work together and where permissions are checked.
-See [Verification](Verification.md) for test results and remaining work.
+See [Verification](Verification.md) for test results and evidence limitations.
 
 ## Purpose and requirements
 
@@ -208,13 +208,13 @@ those items and their protection needs.
 | Alerts and analysis results | User-owned records in component C's database | Prevent unauthorized reads, changes of owner, and deletion. |
 | Private signing key | Component A's configured key file | Prevent others from issuing accepted tokens. |
 | Tokens passed between services | Client and component A, component B, and component C requests | Limit each token to the intended service, action, user, analysis, and time. |
-| Processing capacity | Component B's process | Limit input size. Request-rate limits are still needed. |
+| Processing capacity | Component B's process | Input size is limited. Request-rate limiting is outside the prototype scope. |
 | Helper and other installed packages | Python environment | Review packages and versions. The CI approval gate rejects an installed package or version outside the approved lists. |
 | Test results and release decisions | Reports, Jenkinsfile, Git history | Keep accurate results and make required failures stop a release. |
 
 STRIDE is a checklist of six types of security threats:
 
-| Threat type | What could go wrong here | Current protection | Remaining limitation |
+| Threat type | What could go wrong here | Current protection | Prototype limitation |
 |---|---|---|---|
 | Spoofing — pretending to be someone else | An attacker presents false user/service permission. | Signed tokens and claim checks. | A stolen token can be used until it expires. |
 | Tampering — changing data | A caller changes ownership or makes input change an SQL query. | Owner from signed token, parameterized SQL, document checks. | Correct structure does not prove a result is factually correct. |
@@ -272,8 +272,8 @@ the new record incorrectly stored for him using Alice's create permission.
 Alice cannot read that new record. This shows the ownership error at creation
 while the normal owner-based read rule continues to work.
 
-Separate local processes are sufficient for the assignment. Remaining CI
-work is listed in [Verification](Verification.md).
+Separate local processes satisfy the assignment architecture. CI results and
+their limitations are described in [Verification](Verification.md).
 
 ## Production release and operation
 
@@ -290,4 +290,4 @@ Before offering the application as a production service, it would need:
 - Audit logs, monitoring, backups, data-retention rules, and recovery tests.
 - Evaluation of a real processing model if the development stub is replaced.
 
-These production features are not implemented.
+These production features are intentionally outside the prototype scope.

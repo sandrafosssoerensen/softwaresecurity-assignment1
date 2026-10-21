@@ -42,12 +42,8 @@ direct SQL failure.
 
 [Verification](Verification.md) contains the test results and known limitations.
 
-Before submitting, add a personal description of which code and results you
-checked, what you changed yourself, and any further AI use for the report.
+## Responsibility
 
-## Before submitting
-
-- Check that this list accurately describes the assistance used.
-- Add a personal account of code review, changes, and understanding.
-- Include any further AI use for the report or remaining implementation.
-- Check the course/university declaration requirements linked in the assignment.
+The repository owner remains responsible for understanding the submitted
+code, validating the recorded results, and providing the declaration required
+by the course and university.

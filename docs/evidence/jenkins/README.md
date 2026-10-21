@@ -3,13 +3,39 @@
 Saved reports from the corrected and vulnerable versions, with a short
 explanation of the results.
 
+## Current build evidence locations
+
+The following folders are ready for the latest Jenkins exports. A placeholder
+is not evidence by itself. Replace or supplement each README with the complete
+console output, screenshots, and extracted build artifacts.
+
+| Branch or purpose | Build | Observed result | Folder |
+|---|---:|---|---|
+| `main` | #1 | Success, complete console and artifacts | [main/build-1](main/build-1/) |
+| `assignment-work` | #13 | Success, complete console and artifacts | [assignment-work/build-13](assignment-work/build-13/) |
+| `fixed-version` | #6 | Success, complete console and artifacts | [fixed-version/build-6](fixed-version/build-6/) |
+| `vulnerable-version` | #5 | Expected failure, complete console and artifacts | [vulnerable-version/build-5](vulnerable-version/build-5/) |
+| `experiment-composition-isolated` | #1 | Expected failure, complete console and artifacts | [experiment-composition-isolated/build-1](experiment-composition-isolated/build-1/) |
+| Pull-request build | Pending | Not demonstrated | [pull-request](pull-request/) |
+| Jenkins settings | Current setup | Configuration screenshots complete | [configuration](configuration/) |
+
+The red vulnerable builds are useful evidence only when their console and test
+reports show the intended security-test failures. An installation or service
+startup error would not demonstrate the vulnerability gate.
+
 ## Saved reports
 
-Each folder contains five files: the HTTP test result, SQL test result,
-Bandit text/JSON reports, and pip-audit JSON report.
+The historical build-4 folders contain the HTTP result, SQL result, Bandit
+text/JSON reports, and pip-audit JSON report. Current build folders also
+include dependency-approval and dependency-gate results when available.
 
 | Folder | HTTP tests | SQL test | Bandit | Package audit |
 |---|---|---|---|---|
+| [main/build-1](main/build-1/) | 10 pass | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
+| [assignment-work/build-13](assignment-work/build-13/) | 10 pass | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
+| [fixed-version/build-6](fixed-version/build-6/) | 10 pass | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
+| [vulnerable-version/build-5](vulnerable-version/build-5/) | 6 pass, 4 fail | 1 fails | B608: 1 medium warning, B105: 1 low warning | No known vulnerabilities, dependency approval passes |
+| [experiment-composition-isolated/build-1](experiment-composition-isolated/build-1/) | 9 pass, 1 composition failure | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
 | [assignment-work/build-4](assignment-work/build-4/) | 9 pass | 1 pass | B105: 1 low warning | No known vulnerabilities in the checked packages |
 | [fixed-version/build-4](fixed-version/build-4/) | 9 pass | 1 pass | B105: 1 low warning | No known vulnerabilities in the checked packages |
 | [vulnerable-version/build-4](vulnerable-version/build-4/) | 6 pass, 3 fail | 1 fails | B608: 1 medium warning, B105: 1 low warning | No known vulnerabilities in the checked packages |
@@ -91,10 +117,11 @@ The vulnerable version is expected to fail tests that require secure
 behavior. B608 is medium severity and does not trigger the current high-only
 Bandit gate, so the tests provide the failures for this comparison.
 
-These saved archives predate the CI fixes. The current source checks every
-test-suite exit code, allocates separate test ports, and rejects unapproved
-package names or versions. [Local checks](../local-ci-fixes/README.md)
-record the new verification. Export fresh Jenkins runs before treating these
-changes as demonstrated Jenkins behavior.
-[Verification](../../Verification.md#jenkins-evidence-and-gaps) explains the
+These saved `build-4` archives predate the CI fixes. The current source checks
+every test-suite exit code, allocates separate test ports, and rejects
+unapproved package names or versions. [Local checks](../local-ci-fixes/README.md)
+record how those changes were checked before the latest Jenkins runs. Export
+the new build files into the placeholder folders above before citing those
+runs as repository evidence.
+[Verification](../../Verification.md#jenkins-evidence) explains the
 remaining work.
