@@ -196,6 +196,13 @@ cause, and relevant job or webhook settings.
 Periodic scanning can combine several pushes, so it does not prove that
 every push caused a separate build.
 
+Pull request #1 provides direct pull-request evidence. GitHub displayed
+separate `branch` and `pr-head` Jenkins checks. Jenkins fetched
+`refs/pull/1/head`, used the `PR-1` workspace, passed the complete pipeline,
+archived its reports, and notified GitHub of the result. The corresponding
+[console, screenshots, and reports](evidence/jenkins/pull-request/pr-1-build-1/)
+are stored with the repository evidence.
+
 ## Verification coverage
 
 - [x] Original four-phase plan committed before the implementation commit.
@@ -210,6 +217,7 @@ every push caused a separate build.
 - [x] Apply the same portable pipeline and test harness to all three working/comparison branches.
 - [x] Demonstrate the composition flaw alone with read ownership checks active and save both comparison runs.
 - [x] Run the updated pipeline in Jenkins on corrected, vulnerable, and isolated-composition branches.
+- [x] Demonstrate separate automatic Jenkins checks for a branch push and pull request.
 - [x] Confirm CWE-20, CWE-89, and CWE-862 against the private Brightspace course catalogue.
 
 The [isolated composition results](evidence/composition-isolated/README.md)

@@ -1,14 +1,17 @@
-# Placeholder for pull-request pipeline evidence
+# Pull-request pipeline evidence
 
-No pull-request build has been saved yet.
+Pull request #1 proposes the documentation and evidence branch
+`final-evidence-and-docs` for merge into `main`. Jenkins discovered the pull
+request and ran the repository pipeline successfully.
 
-After creating a small pull request, add:
+[PR-1 build #1](pr-1-build-1/) contains:
 
-- `overview.png` showing the pull request job in the multibranch overview
-- `console.txt` showing that Jenkins started the pull-request build
-- the extracted `reports` artifact from the build
-- `pull-request-details.md` containing the source branch, target branch,
-  commit SHA, pull-request number, build number, and result
+- the complete Jenkins console output
+- all seven generated analysis and test artifacts
+- a GitHub screenshot showing separate `branch` and `pr-head` checks
+- a Jenkins screenshot showing **Pull Requests (1)** and successful PR build #1
+- a concise record of the source, target, revision, trigger, and result
 
-Use a harmless documentation-only change for this demonstration. The build
-should finish successfully before the pull request is merged or closed.
+The console is direct evidence that Jenkins fetched `refs/pull/1/head`, used a
+workspace ending in `_PR-1`, checked out commit `434f5df`, archived the reports,
+notified GitHub, and finished with `SUCCESS`.

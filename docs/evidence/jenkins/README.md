@@ -16,7 +16,7 @@ explains the result.
 | `fixed-version` | #6 | Success, complete console and artifacts | [fixed-version/build-6](fixed-version/build-6/) |
 | `vulnerable-version` | #5 | Expected failure, complete console and artifacts | [vulnerable-version/build-5](vulnerable-version/build-5/) |
 | `experiment-composition-isolated` | #1 | Expected failure, complete console and artifacts | [experiment-composition-isolated/build-1](experiment-composition-isolated/build-1/) |
-| Pull-request build | Pending | Not demonstrated | [pull-request](pull-request/) |
+| Pull request #1 | #1 | Success, complete console, screenshots, and artifacts | [pull-request](pull-request/) |
 | Jenkins settings | Current setup | Configuration screenshots complete | [configuration](configuration/) |
 
 The red vulnerable builds are useful evidence only when their console and test
@@ -36,6 +36,7 @@ report, and complete console output.
 | [fixed-version/build-6](fixed-version/build-6/) | 10 pass | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
 | [vulnerable-version/build-5](vulnerable-version/build-5/) | 6 pass, 4 fail | 1 fails | B608: 1 medium warning, B105: 1 low warning | No known vulnerabilities, dependency approval passes |
 | [experiment-composition-isolated/build-1](experiment-composition-isolated/build-1/) | 9 pass, 1 composition failure | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
+| [pull-request/pr-1-build-1](pull-request/pr-1-build-1/) | 10 pass | 1 passes | B105: 1 low warning, high gate passes | No known vulnerabilities, dependency approval passes |
 
 ## Code versions used to understand the comparison
 

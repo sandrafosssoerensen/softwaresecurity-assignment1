@@ -1,0 +1,31 @@
+Run started:2026-10-21 18:34:55.352922+00:00
+
+Test results:
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'Bearer'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: app\views.py:99:25
+98	    return JsonResponse({"access_token": issue(user.pk, "A", "user", "admin" if user.is_staff else "user"),
+99	                         "token_type": "Bearer", "expires_in": 900})
+100	
+101	
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 245
+	Total lines skipped (#nosec): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 1
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 1
+		High: 0
+Files skipped (0):
