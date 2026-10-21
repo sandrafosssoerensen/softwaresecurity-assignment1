@@ -572,8 +572,11 @@ to compare with earlier runs.
 
 The current processor builds a fixed development summary instead of using
 a real model. Its accuracy as a real threat assessment has not been tested.
-Docker Compose has not been verified by running it here. Encrypted transport,
-key replacement, reliable background processing, monitoring, and model
-assessment are future production needs. The assignment does not require
-Ollama or Docker specifically. Remaining required work is listed in
-[Verification](Verification.md#remaining-work).
+The optional Docker Compose setup has passed a local build, three-component
+health check, and authenticated create/read/delete smoke test on Rancher
+Desktop. This does not establish production-grade container isolation.
+Encrypted transport, key replacement, reliable background processing,
+monitoring, and model assessment are future production needs. The assignment
+does not require Ollama or Docker specifically. The sanitized output is in
+[Docker evidence](evidence/docker/README.md). Remaining required work is
+listed in [Verification](Verification.md#remaining-work).

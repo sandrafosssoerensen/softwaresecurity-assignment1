@@ -228,7 +228,9 @@ run under the same OS user. Windows may therefore let a compromised component B 
 read component A's key or component C's database directly. A *sandbox* would restrict this through
 operating-system permissions or similar isolation. Separate processes alone
 do not provide that restriction. The optional Compose configuration uses
-different mounts but has not yet been tested.
+different mounts. It has passed a local functional smoke test, but that test
+did not assess whether a compromised container could escape its intended
+permissions or access another component's mounted data.
 
 ## Secure design principles
 

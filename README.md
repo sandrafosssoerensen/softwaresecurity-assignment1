@@ -257,8 +257,11 @@ repository root/
 The result is labelled `development-stub`: it is a fixed-format summary,
 not output from a real AI model. Its quality as a real threat assessment
 has not been established. [compose.yaml](compose.yaml) and
-[Dockerfile](Dockerfile) provide an optional container setup, but it has
-not yet been tested.
+[Dockerfile](Dockerfile) provide an optional container setup. A local
+Rancher Desktop smoke test built and started all three containers, checked
+their health routes, and completed the authenticated create/read/delete flow.
+[Docker evidence](docs/evidence/docker/README.md) records the sanitized result.
+This remains a development setup rather than a production deployment.
 
 All three local processes run under the same Windows account. Although the
 application gives them different jobs and API permissions, Windows may let

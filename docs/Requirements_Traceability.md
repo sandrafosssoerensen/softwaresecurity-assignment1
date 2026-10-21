@@ -33,7 +33,10 @@ still needs work. Page numbers refer to `Software_Security_Assignment_I (1).pdf`
 The assignment allows separate local processes and an API client. Docker,
 Ollama, website pages, and ZAP are not required. The development result is
 clearly labelled as a stub, meaning a simple replacement for a real model.
-The container configuration has not yet been tested.
+The optional container configuration has passed a local Rancher Desktop
+smoke test covering image builds, three running components, health checks,
+and the authenticated create/read/delete flow. See
+[Docker evidence](evidence/docker/README.md).
 
 The ordinary helper package is required and installed. The malicious
 package exercise and its digest-manifest experiments are optional and were

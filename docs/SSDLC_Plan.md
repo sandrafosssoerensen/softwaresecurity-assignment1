@@ -32,7 +32,10 @@ The processor returns a development stub: a fixed-format result used in
 place of a real model. The original plan mentioned later Ollama integration,
 but this was not implemented and is not required by the assignment.
 The demonstrated setup uses separate local processes. Containers are an
-optional setup that has not yet been tested.
+optional setup. The Compose configuration later passed a local build,
+three-component health check, and authenticated create/read/delete smoke test.
+This additional result does not change the original architecture decision or
+make the development configuration production-ready.
 
 ## Four phases and gates
 
