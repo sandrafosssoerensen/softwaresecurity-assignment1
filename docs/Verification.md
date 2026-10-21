@@ -20,11 +20,9 @@ Run from the repository root, one command after the other:
 .\.venv\Scripts\python.exe tests\test_flow.py
 ```
 
-[Fixed SQL output](evidence/jenkins/fixed-version/build-4/test_store_sql.txt)
-shows one passing test. The current local fixed output shows ten HTTP tests.
-The older Jenkins HTTP archive shows nine because the API SQL regression was
-added after that archive was created. Older logs have eight HTTP tests because
-the test for untrusted ownership was added later.
+[Fixed SQL output](evidence/jenkins/fixed-version/build-6/test_store_sql.txt)
+shows one passing test. The corresponding Jenkins HTTP report shows all ten
+functional and authorization tests passing.
 
 | Test | What the passing result shows |
 |---|---|
@@ -48,13 +46,13 @@ analysis ID, repeated token use, or invalid result format.
 ## Vulnerability evidence
 
 The [evidence index](evidence/jenkins/README.md) links the fixed and vulnerable
-results. Older per-CWE logs are also kept for reference.
+results. Individual per-CWE logs are also kept for reference.
 
 | Flaw | Vulnerable result | Corrected result | Evidence |
 |---|---|---|---|
-| CWE-20: missing size check | Oversized input is accepted: 201 instead of 413. | The test passes by receiving 413. | [Vulnerable HTTP](evidence/jenkins/vulnerable-version/build-4/test_flow.txt), [fixed HTTP](evidence/jenkins/fixed-version/build-4/test_flow.txt) |
+| CWE-20: missing size check | Oversized input is accepted: 201 instead of 413. | The test passes by receiving 413. | [Vulnerable HTTP](evidence/jenkins/vulnerable-version/build-5/test_flow.txt), [fixed HTTP](evidence/jenkins/fixed-version/build-6/test_flow.txt) |
 | CWE-862: missing owner check | Bob reads Alice's result: 200 instead of 404. | Bob is denied, while Alice and admin can read. | Same HTTP reports |
-| CWE-89: SQL built from input text | The direct SQL test returns `known-analysis`, and the HTTP test returns Alice's selected record for the injected ID. | The direct SQL test returns no record, and the HTTP route rejects the malformed ID with 400. | [Vulnerable SQL](evidence/jenkins/vulnerable-version/build-4/test_store_sql.txt), [fixed SQL](evidence/jenkins/fixed-version/build-4/test_store_sql.txt), [current local HTTP](evidence/local-ci-fixes/vulnerable-test_flow-current.txt) |
+| CWE-89: SQL built from input text | The direct SQL test returns `known-analysis`, and the HTTP test returns Alice's selected record for the injected ID. | The direct SQL test returns no record, and the HTTP route rejects the malformed ID with 400. | [Vulnerable SQL](evidence/jenkins/vulnerable-version/build-5/test_store_sql.txt), [fixed SQL](evidence/jenkins/fixed-version/build-6/test_store_sql.txt), [vulnerable HTTP](evidence/jenkins/vulnerable-version/build-5/test_flow.txt) |
 | Composition/CWE-807: request body chooses owner | With read ownership checks active, a token permitting creation for Alice is used with Bob as body owner. Component C returns 201 and owner `2`. Alice's later read is 404 and Bob's is 200. | Component C rejects the owner field with 400. No record is created, so later reads return 404. Normal create/read still works. | [Isolated comparison](evidence/composition-isolated/README.md) |
 
 The size test shows acceptance of large input. It does not measure CPU or
@@ -106,11 +104,8 @@ git show 8e1b610:docs/SSDLC_Plan.md
 The [evidence index](evidence/jenkins/README.md) distinguishes saved reports,
 local verification, current build folders, and build provenance.
 
-The historical assignment-work #10 console shows a manually started build
-at `d67a0c2`. Jenkins found Python, built and installed the helper, ran the
-scanners and tests, saved reports, and ended successfully. The current
-multibranch overview also displayed successful builds for assignment-work
-#12, fixed-version #6, and main #1. Vulnerable-version #5 and the isolated
+The current multibranch evidence contains successful builds for
+assignment-work #13, fixed-version #6, and main #1. Vulnerable-version #5 and the isolated
 composition build #1 were blocked as intended. Their console logs, artifacts,
 commits, and build causes are represented by the corresponding folders in the
 evidence index.
@@ -194,10 +189,6 @@ malicious-package and hash-manifest experiments are outside the demonstrated
 scope.
 
 ### Push and pull-request automation
-
-The #9 console says `Started by GitHub push`, so that event
-reached Jenkins. The build failed because Jenkins could not find Python.
-The later successful #10 build was started manually.
 
 The multibranch job is configured to discover branches and pull requests
 and to scan periodically. Build provenance consists of the commit, build
