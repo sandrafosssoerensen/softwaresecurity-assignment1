@@ -37,12 +37,13 @@ Responses return through the components that handled the request.
 
 ## Versions and results
 
-| Branch | Purpose | Saved result |
+| Branch | Purpose | Current verification result |
 |---|---|---|
-| `assignment-work` | Corrected application and current documents | Jenkins build #10 succeeded at commit `d67a0c2` after Jenkins could find Python through PATH. |
-| `fixed-version` | Corrected version used for comparison | Ten HTTP tests and one direct SQL test pass. |
-| `vulnerable-version` | Version with four deliberately enabled security flaws | Four HTTP tests and one direct SQL test fail where they check the broken protections. |
-| `experiment-composition-isolated` | Supplementary experiment with only the composition flaw enabled | Nine ordinary HTTP tests pass and only the owner-field test fails. The focused comparison confirms that read ownership checks remain active. |
+| `assignment-work` | Corrected application and current documents | Ten HTTP tests and one direct SQL test pass. Jenkins displayed build #12 as successful. |
+| `fixed-version` | Corrected version used for comparison | Ten HTTP tests and one direct SQL test pass. Jenkins displayed build #6 as successful. |
+| `main` | Corrected release branch | Jenkins displayed build #1 as successful. |
+| `vulnerable-version` | Version with four deliberately enabled security flaws | Four HTTP tests and one direct SQL test fail where they check the broken protections. Jenkins build #5 is blocked as intended. |
+| `experiment-composition-isolated` | Supplementary experiment with only the composition flaw enabled | Nine ordinary HTTP tests pass and only the owner-field test fails. Jenkins build #1 is blocked as intended. |
 
 The [evidence index](docs/evidence/jenkins/README.md) links the saved reports.
 Bandit finds unsafe SQL construction (B608/CWE-89) in the vulnerable version.
@@ -53,8 +54,8 @@ they checked at that time.
 
 The updated pipeline checks command results and approved package versions.
 HTTP tests use separate automatically allocated ports. These changes have
-local test evidence. New Jenkins push and pull-request runs still need to be
-saved. See [Verification](docs/Verification.md#remaining-work).
+local test evidence and current Jenkins runs. The [evidence index](docs/evidence/jenkins/README.md)
+separates historical reports, local checks, and Jenkins build records.
 
 ## Four vulnerabilities and their fixes
 
@@ -203,7 +204,7 @@ installation path. The same pipeline and test harness are used on the
 working and comparison branches.
 
 See [Jenkins setup](docs/How_To_Run.md#8-jenkins-and-cicd) and
-[remaining CI checks](docs/Verification.md#jenkins-evidence-and-gaps).
+[CI evidence and policy](docs/Verification.md#jenkins-evidence).
 
 ## Project structure
 
@@ -245,26 +246,29 @@ repository root/
 | [Terminology](docs/Terminology.md) | Look up technical words and abbreviations |
 | [SSDLC plan](docs/SSDLC_Plan.md) | Read the original plan reference and security activities in each phase |
 | [Requirements traceability](docs/Requirements_Traceability.md) | Find which code and evidence address each assignment requirement |
-| [Verification](docs/Verification.md) | Check actual results, limits, and unfinished work |
+| [Verification](docs/Verification.md) | Check test results, evidence interpretation, and limitations |
 | [Vulnerability experiments](docs/Vulnerability_Experiments_Guide.md) | Understand and repeat the four security experiments |
 | [Isolated composition experiment](docs/Composition_Isolation.md) | Separate the wrong-owner write from the missing read ownership check |
 | [Implementation guide](docs/Implementation_Guide.md) | Learn how to rebuild the application step by step |
-| [AI-use declaration](docs/AI_Use.md) | Review how AI assistance was used |
+| [AI-use declaration](docs/AI_Use.md) | Read the disclosure of AI assistance |
 | [Jenkins evidence index](docs/evidence/jenkins/README.md) | Find saved reports and information about their source |
 
 ## Scope and production limitations
 
 The result is labelled `development-stub`: it is a fixed-format summary,
-not output from a real AI model. Its quality as a real threat assessment
-has not been established. [compose.yaml](compose.yaml) and
-[Dockerfile](Dockerfile) provide an optional container setup, but it has
-not yet been tested.
+not output from a real AI model and not an assessed threat-analysis model.
+[compose.yaml](compose.yaml) and
+[Dockerfile](Dockerfile) provide an optional container setup. A local
+Rancher Desktop smoke test built and started all three containers, checked
+their health routes, and completed the authenticated create/read/delete flow.
+[Docker evidence](docs/evidence/docker/README.md) records the sanitized result.
+This remains a development setup rather than a production deployment.
 
 All three local processes run under the same Windows account. Although the
 application gives them different jobs and API permissions, Windows may let
 them access the same files. Separate service accounts and file permissions
-would be needed to restrict that access. The optional malicious package
-experiment and ZAP scan have no completed evidence here.
+would be needed to restrict that access. Optional malicious-package and ZAP
+experiments are outside the demonstrated scope.
 
 The prototype uses local HTTP and Django's development server. Before
 production use it would need encrypted connections, stronger file/process

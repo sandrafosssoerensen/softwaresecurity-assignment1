@@ -1,0 +1,366 @@
+Branch indexing
+Connecting to https://api.github.com using sandrafosssoerensen/****** (GitHub read access for assignment)
+Obtained Jenkinsfile from 434f5df95b682ce67ad34eb95ea3ea64fffae744
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timestamps
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] deleteDir
+[Pipeline] checkout
+[2026-10-21T18:33:28.919Z] Selected Git installation does not exist. Using Default
+[2026-10-21T18:33:28.920Z] The recommended git tool is: NONE
+[2026-10-21T18:33:28.926Z] using credential githus-assignment-read
+[2026-10-21T18:33:28.959Z] Cloning the remote Git repository
+[2026-10-21T18:33:28.959Z] Cloning with configured refspecs honoured and without tags
+[2026-10-21T18:33:28.960Z] Cloning repository https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git
+[2026-10-21T18:33:28.963Z]  > git.exe init C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1 # timeout=10
+[2026-10-21T18:33:29.324Z] Fetching upstream changes from https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git
+[2026-10-21T18:33:29.324Z]  > git.exe --version # timeout=10
+[2026-10-21T18:33:29.390Z]  > git --version # 'git version 2.49.0.windows.1'
+[2026-10-21T18:33:29.390Z] using GIT_ASKPASS to set credentials GitHub read access for assignment
+[2026-10-21T18:33:29.395Z]  > git.exe fetch --no-tags --force --progress -- https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git +refs/pull/1/head:refs/remotes/origin/PR-1 # timeout=10
+[2026-10-21T18:33:31.962Z]  > git.exe config remote.origin.url https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git # timeout=10
+[2026-10-21T18:33:32.065Z]  > git.exe config --add remote.origin.fetch +refs/pull/1/head:refs/remotes/origin/PR-1 # timeout=10
+[2026-10-21T18:33:32.191Z]  > git.exe config remote.origin.url https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git # timeout=10
+[2026-10-21T18:33:32.295Z] Fetching without tags
+[2026-10-21T18:33:32.295Z] Fetching upstream changes from https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git
+[2026-10-21T18:33:32.295Z] using GIT_ASKPASS to set credentials GitHub read access for assignment
+[2026-10-21T18:33:32.299Z]  > git.exe fetch --no-tags --force --progress -- https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git +refs/pull/1/head:refs/remotes/origin/PR-1 # timeout=10
+[2026-10-21T18:33:33.759Z] Checking out Revision 434f5df95b682ce67ad34eb95ea3ea64fffae744 (PR-1)
+[2026-10-21T18:33:33.759Z]  > git.exe config core.sparsecheckout # timeout=10
+[2026-10-21T18:33:33.824Z]  > git.exe checkout -f 434f5df95b682ce67ad34eb95ea3ea64fffae744 # timeout=10
+[2026-10-21T18:33:34.088Z] Commit message: "clean up in old builds"
+[2026-10-21T18:33:34.089Z] First time build. Skipping changelog.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build)
+[Pipeline] bat
+[2026-10-21T18:33:35.953Z] 
+[2026-10-21T18:33:35.953Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>where python 
+[2026-10-21T18:33:35.953Z] C:\Users\sandr\AppData\Local\Programs\Python\Python312\python.exe
+[Pipeline] bat
+[2026-10-21T18:33:36.267Z] 
+[2026-10-21T18:33:36.268Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>python --version 
+[2026-10-21T18:33:36.841Z] Python 3.12.10
+[Pipeline] bat
+[2026-10-21T18:33:37.465Z] 
+[2026-10-21T18:33:37.465Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>if not exist "reports" mkdir "reports" 
+[Pipeline] bat
+[2026-10-21T18:33:37.760Z] 
+[2026-10-21T18:33:37.760Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>python scripts\check_dependencies.py --validate-only 
+[2026-10-21T18:33:38.335Z] Approval files valid: 46 pinned packages.
+[Pipeline] bat
+[2026-10-21T18:33:39.752Z] 
+[2026-10-21T18:33:39.752Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>python -m venv .jenkins-venv 
+[Pipeline] bat
+[2026-10-21T18:33:58.145Z] 
+[2026-10-21T18:33:58.145Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" -m pip install -r requirements.txt -r requirements-build.txt -r requirements-ci.txt 
+[2026-10-21T18:34:03.445Z] Collecting Django==5.2.18 (from -r requirements.txt (line 1))
+[2026-10-21T18:34:03.445Z]   Using cached django-5.2.18-py3-none-any.whl.metadata (4.1 kB)
+[2026-10-21T18:34:03.445Z] Collecting PyJWT==2.15.1 (from -r requirements.txt (line 2))
+[2026-10-21T18:34:03.445Z]   Using cached pyjwt-2.15.1-py3-none-any.whl.metadata (3.5 kB)
+[2026-10-21T18:34:03.445Z] Collecting cryptography==50.0.2 (from -r requirements.txt (line 3))
+[2026-10-21T18:34:03.445Z]   Using cached cryptography-50.0.2-cp311-abi3-win_amd64.whl.metadata (4.4 kB)
+[2026-10-21T18:34:03.445Z] Collecting requests==2.34.2 (from -r requirements.txt (line 4))
+[2026-10-21T18:34:03.445Z]   Using cached requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+[2026-10-21T18:34:03.445Z] Collecting asgiref==3.12.1 (from -r requirements.txt (line 5))
+[2026-10-21T18:34:03.445Z]   Using cached asgiref-3.12.1-py3-none-any.whl.metadata (9.4 kB)
+[2026-10-21T18:34:03.709Z] Collecting sqlparse==0.6.0 (from -r requirements.txt (line 6))
+[2026-10-21T18:34:03.709Z]   Using cached sqlparse-0.6.0-py3-none-any.whl.metadata (6.0 kB)
+[2026-10-21T18:34:03.709Z] Collecting cffi==2.1.1 (from -r requirements.txt (line 7))
+[2026-10-21T18:34:03.709Z]   Using cached cffi-2.1.1-cp312-cp312-win_amd64.whl.metadata (2.6 kB)
+[2026-10-21T18:34:03.709Z] Collecting pycparser==3.11 (from -r requirements.txt (line 8))
+[2026-10-21T18:34:03.710Z]   Using cached pycparser-3.11-py3-none-any.whl.metadata (8.2 kB)
+[2026-10-21T18:34:03.710Z] Collecting certifi==2026.10.19 (from -r requirements.txt (line 9))
+[2026-10-21T18:34:03.971Z]   Using cached certifi-2026.10.19-py3-none-any.whl.metadata (2.5 kB)
+[2026-10-21T18:34:03.971Z] Collecting charset-normalizer==3.5.2 (from -r requirements.txt (line 10))
+[2026-10-21T18:34:03.971Z]   Using cached charset_normalizer-3.5.2-cp312-cp312-win_amd64.whl.metadata (47 kB)
+[2026-10-21T18:34:03.971Z] Collecting idna==3.20 (from -r requirements.txt (line 11))
+[2026-10-21T18:34:03.971Z]   Using cached idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+[2026-10-21T18:34:04.236Z] Collecting urllib3==2.8.0 (from -r requirements.txt (line 12))
+[2026-10-21T18:34:04.236Z]   Using cached urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+[2026-10-21T18:34:04.236Z] Collecting build==1.6.1 (from -r requirements-build.txt (line 1))
+[2026-10-21T18:34:04.236Z]   Using cached build-1.6.1-py3-none-any.whl.metadata (5.6 kB)
+[2026-10-21T18:34:04.499Z] Collecting setuptools==82.0.1 (from -r requirements-build.txt (line 2))
+[2026-10-21T18:34:04.499Z]   Using cached setuptools-82.0.1-py3-none-any.whl.metadata (6.5 kB)
+[2026-10-21T18:34:04.499Z] Collecting wheel==0.48.0 (from -r requirements-build.txt (line 3))
+[2026-10-21T18:34:04.499Z]   Using cached wheel-0.48.0-py3-none-any.whl.metadata (2.3 kB)
+[2026-10-21T18:34:04.499Z] Collecting packaging==26.3 (from -r requirements-build.txt (line 4))
+[2026-10-21T18:34:04.499Z]   Using cached packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+[2026-10-21T18:34:04.499Z] Collecting pyproject_hooks==1.3.3 (from -r requirements-build.txt (line 5))
+[2026-10-21T18:34:04.499Z]   Using cached pyproject_hooks-1.3.3-py3-none-any.whl.metadata (1.3 kB)
+[2026-10-21T18:34:04.499Z] Requirement already satisfied: pip==25.0.1 in c:\programdata\jenkins\.jenkins\workspace\ity-assignment1-multibranch_pr-1\.jenkins-venv\lib\site-packages (from -r requirements-ci.txt (line 2)) (25.0.1)
+[2026-10-21T18:34:04.499Z] Collecting bandit==1.9.4 (from -r requirements-ci.txt (line 3))
+[2026-10-21T18:34:04.499Z]   Using cached bandit-1.9.4-py3-none-any.whl.metadata (7.1 kB)
+[2026-10-21T18:34:04.762Z] Collecting pip-audit==2.10.1 (from -r requirements-ci.txt (line 4))
+[2026-10-21T18:34:04.762Z]   Using cached pip_audit-2.10.1-py3-none-any.whl.metadata (28 kB)
+[2026-10-21T18:34:04.762Z] Collecting boolean.py==5.0 (from -r requirements-ci.txt (line 5))
+[2026-10-21T18:34:04.762Z]   Using cached boolean_py-5.0-py3-none-any.whl.metadata (2.3 kB)
+[2026-10-21T18:34:04.762Z] Collecting CacheControl==0.14.4 (from -r requirements-ci.txt (line 6))
+[2026-10-21T18:34:04.763Z]   Using cached cachecontrol-0.14.4-py3-none-any.whl.metadata (3.1 kB)
+[2026-10-21T18:34:04.763Z] Collecting colorama==0.4.6 (from -r requirements-ci.txt (line 7))
+[2026-10-21T18:34:04.763Z]   Using cached colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+[2026-10-21T18:34:05.417Z] Collecting cyclonedx-python-lib==11.12.0 (from -r requirements-ci.txt (line 8))
+[2026-10-21T18:34:05.417Z]   Using cached cyclonedx_python_lib-11.12.0-py3-none-any.whl.metadata (6.9 kB)
+[2026-10-21T18:34:05.417Z] Collecting defusedxml==0.7.1 (from -r requirements-ci.txt (line 9))
+[2026-10-21T18:34:05.417Z]   Using cached defusedxml-0.7.1-py2.py3-none-any.whl.metadata (32 kB)
+[2026-10-21T18:34:05.417Z] Collecting filelock==4.2.0 (from -r requirements-ci.txt (line 10))
+[2026-10-21T18:34:05.417Z]   Using cached filelock-4.2.0-py3-none-any.whl.metadata (2.0 kB)
+[2026-10-21T18:34:05.668Z] Collecting license-expression==30.4.4 (from -r requirements-ci.txt (line 11))
+[2026-10-21T18:34:05.668Z]   Using cached license_expression-30.4.4-py3-none-any.whl.metadata (11 kB)
+[2026-10-21T18:34:05.668Z] Collecting markdown-it-py==4.2.0 (from -r requirements-ci.txt (line 12))
+[2026-10-21T18:34:05.668Z]   Using cached markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+[2026-10-21T18:34:05.668Z] Collecting mdurl==0.1.2 (from -r requirements-ci.txt (line 13))
+[2026-10-21T18:34:05.668Z]   Using cached mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+[2026-10-21T18:34:05.668Z] Collecting msgpack==1.2.3 (from -r requirements-ci.txt (line 14))
+[2026-10-21T18:34:05.668Z]   Using cached msgpack-1.2.3-cp312-cp312-win_amd64.whl.metadata (8.5 kB)
+[2026-10-21T18:34:05.932Z] Collecting packageurl-python==0.17.6 (from -r requirements-ci.txt (line 15))
+[2026-10-21T18:34:05.932Z]   Using cached packageurl_python-0.17.6-py3-none-any.whl.metadata (5.1 kB)
+[2026-10-21T18:34:05.932Z] Collecting pip-api==0.0.35 (from -r requirements-ci.txt (line 16))
+[2026-10-21T18:34:05.932Z]   Using cached pip_api-0.0.35-py3-none-any.whl.metadata (17 kB)
+[2026-10-21T18:34:05.932Z] Collecting pip-requirements-parser==32.0.1 (from -r requirements-ci.txt (line 17))
+[2026-10-21T18:34:05.932Z]   Using cached pip_requirements_parser-32.0.1-py3-none-any.whl.metadata (9.3 kB)
+[2026-10-21T18:34:05.932Z] Collecting platformdirs==4.13.3 (from -r requirements-ci.txt (line 18))
+[2026-10-21T18:34:05.932Z]   Using cached platformdirs-4.13.3-py3-none-any.whl.metadata (5.5 kB)
+[2026-10-21T18:34:05.932Z] Collecting py-serializable==2.1.0 (from -r requirements-ci.txt (line 19))
+[2026-10-21T18:34:05.932Z]   Using cached py_serializable-2.1.0-py3-none-any.whl.metadata (4.3 kB)
+[2026-10-21T18:34:05.932Z] Collecting Pygments==2.21.0 (from -r requirements-ci.txt (line 20))
+[2026-10-21T18:34:05.932Z]   Using cached pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+[2026-10-21T18:34:06.196Z] Collecting pyparsing==3.3.3 (from -r requirements-ci.txt (line 21))
+[2026-10-21T18:34:06.196Z]   Using cached pyparsing-3.3.3-py3-none-any.whl.metadata (5.9 kB)
+[2026-10-21T18:34:06.196Z] Collecting PyYAML==6.0.3 (from -r requirements-ci.txt (line 22))
+[2026-10-21T18:34:06.196Z]   Using cached pyyaml-6.0.3-cp312-cp312-win_amd64.whl.metadata (2.4 kB)
+[2026-10-21T18:34:06.196Z] Collecting rich==15.0.0 (from -r requirements-ci.txt (line 23))
+[2026-10-21T18:34:06.196Z]   Using cached rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+[2026-10-21T18:34:06.196Z] Collecting sortedcontainers==2.4.0 (from -r requirements-ci.txt (line 24))
+[2026-10-21T18:34:06.196Z]   Using cached sortedcontainers-2.4.0-py2.py3-none-any.whl.metadata (10 kB)
+[2026-10-21T18:34:06.196Z] Collecting stevedore==5.9.1 (from -r requirements-ci.txt (line 25))
+[2026-10-21T18:34:06.196Z]   Using cached stevedore-5.9.1-py3-none-any.whl.metadata (2.3 kB)
+[2026-10-21T18:34:06.460Z] Collecting tomli==2.5.0 (from -r requirements-ci.txt (line 26))
+[2026-10-21T18:34:06.460Z]   Using cached tomli-2.5.0-cp312-cp312-win_amd64.whl.metadata (10 kB)
+[2026-10-21T18:34:06.460Z] Collecting tomli-w==1.2.0 (from -r requirements-ci.txt (line 27))
+[2026-10-21T18:34:06.460Z]   Using cached tomli_w-1.2.0-py3-none-any.whl.metadata (5.7 kB)
+[2026-10-21T18:34:06.460Z] Collecting typing-extensions==4.16.0 (from -r requirements-ci.txt (line 28))
+[2026-10-21T18:34:06.460Z]   Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+[2026-10-21T18:34:06.460Z] Collecting tzdata==2026.5 (from -r requirements-ci.txt (line 29))
+[2026-10-21T18:34:06.460Z]   Using cached tzdata-2026.5-py2.py3-none-any.whl.metadata (1.4 kB)
+[2026-10-21T18:34:06.723Z] Using cached django-5.2.18-py3-none-any.whl (8.3 MB)
+[2026-10-21T18:34:06.723Z] Using cached pyjwt-2.15.1-py3-none-any.whl (33 kB)
+[2026-10-21T18:34:06.723Z] Using cached cryptography-50.0.2-cp311-abi3-win_amd64.whl (3.8 MB)
+[2026-10-21T18:34:06.723Z] Using cached requests-2.34.2-py3-none-any.whl (73 kB)
+[2026-10-21T18:34:06.723Z] Using cached asgiref-3.12.1-py3-none-any.whl (25 kB)
+[2026-10-21T18:34:06.723Z] Using cached sqlparse-0.6.0-py3-none-any.whl (50 kB)
+[2026-10-21T18:34:06.723Z] Using cached cffi-2.1.1-cp312-cp312-win_amd64.whl (185 kB)
+[2026-10-21T18:34:06.723Z] Using cached pycparser-3.11-py3-none-any.whl (51 kB)
+[2026-10-21T18:34:06.723Z] Using cached certifi-2026.10.19-py3-none-any.whl (136 kB)
+[2026-10-21T18:34:06.723Z] Using cached charset_normalizer-3.5.2-cp312-cp312-win_amd64.whl (207 kB)
+[2026-10-21T18:34:06.723Z] Using cached idna-3.20-py3-none-any.whl (69 kB)
+[2026-10-21T18:34:06.723Z] Using cached urllib3-2.8.0-py3-none-any.whl (135 kB)
+[2026-10-21T18:34:06.723Z] Using cached build-1.6.1-py3-none-any.whl (31 kB)
+[2026-10-21T18:34:06.723Z] Using cached setuptools-82.0.1-py3-none-any.whl (1.0 MB)
+[2026-10-21T18:34:06.723Z] Using cached wheel-0.48.0-py3-none-any.whl (33 kB)
+[2026-10-21T18:34:06.723Z] Using cached packaging-26.3-py3-none-any.whl (129 kB)
+[2026-10-21T18:34:06.723Z] Using cached pyproject_hooks-1.3.3-py3-none-any.whl (10 kB)
+[2026-10-21T18:34:06.723Z] Using cached bandit-1.9.4-py3-none-any.whl (134 kB)
+[2026-10-21T18:34:06.723Z] Using cached pip_audit-2.10.1-py3-none-any.whl (62 kB)
+[2026-10-21T18:34:06.723Z] Using cached boolean_py-5.0-py3-none-any.whl (26 kB)
+[2026-10-21T18:34:06.723Z] Using cached cachecontrol-0.14.4-py3-none-any.whl (22 kB)
+[2026-10-21T18:34:06.723Z] Using cached colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+[2026-10-21T18:34:06.723Z] Using cached cyclonedx_python_lib-11.12.0-py3-none-any.whl (529 kB)
+[2026-10-21T18:34:06.723Z] Using cached defusedxml-0.7.1-py2.py3-none-any.whl (25 kB)
+[2026-10-21T18:34:06.723Z] Using cached filelock-4.2.0-py3-none-any.whl (135 kB)
+[2026-10-21T18:34:06.723Z] Using cached license_expression-30.4.4-py3-none-any.whl (120 kB)
+[2026-10-21T18:34:06.723Z] Using cached markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+[2026-10-21T18:34:06.723Z] Using cached mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+[2026-10-21T18:34:06.723Z] Using cached msgpack-1.2.3-cp312-cp312-win_amd64.whl (76 kB)
+[2026-10-21T18:34:06.723Z] Using cached packageurl_python-0.17.6-py3-none-any.whl (36 kB)
+[2026-10-21T18:34:06.723Z] Using cached pip_api-0.0.35-py3-none-any.whl (123 kB)
+[2026-10-21T18:34:06.723Z] Using cached pip_requirements_parser-32.0.1-py3-none-any.whl (35 kB)
+[2026-10-21T18:34:06.723Z] Using cached platformdirs-4.13.3-py3-none-any.whl (32 kB)
+[2026-10-21T18:34:06.723Z] Using cached py_serializable-2.1.0-py3-none-any.whl (23 kB)
+[2026-10-21T18:34:06.988Z] Using cached pygments-2.21.0-py3-none-any.whl (1.3 MB)
+[2026-10-21T18:34:06.988Z] Using cached pyparsing-3.3.3-py3-none-any.whl (126 kB)
+[2026-10-21T18:34:06.988Z] Using cached pyyaml-6.0.3-cp312-cp312-win_amd64.whl (154 kB)
+[2026-10-21T18:34:06.988Z] Using cached rich-15.0.0-py3-none-any.whl (310 kB)
+[2026-10-21T18:34:06.988Z] Using cached sortedcontainers-2.4.0-py2.py3-none-any.whl (29 kB)
+[2026-10-21T18:34:06.988Z] Using cached stevedore-5.9.1-py3-none-any.whl (54 kB)
+[2026-10-21T18:34:06.988Z] Using cached tomli-2.5.0-cp312-cp312-win_amd64.whl (112 kB)
+[2026-10-21T18:34:06.988Z] Using cached tomli_w-1.2.0-py3-none-any.whl (6.7 kB)
+[2026-10-21T18:34:06.988Z] Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+[2026-10-21T18:34:06.988Z] Using cached tzdata-2026.5-py2.py3-none-any.whl (347 kB)
+[2026-10-21T18:34:07.252Z] Installing collected packages: sortedcontainers, boolean.py, urllib3, tzdata, typing-extensions, tomli-w, tomli, stevedore, sqlparse, setuptools, PyYAML, pyproject_hooks, pyparsing, PyJWT, Pygments, pycparser, platformdirs, pip-api, packaging, packageurl-python, msgpack, mdurl, license-expression, idna, filelock, defusedxml, colorama, charset-normalizer, certifi, asgiref, wheel, requests, py-serializable, pip-requirements-parser, markdown-it-py, Django, cffi, build, rich, cyclonedx-python-lib, cryptography, CacheControl, bandit, pip-audit
+[2026-10-21T18:34:33.778Z] Successfully installed CacheControl-0.14.4 Django-5.2.18 PyJWT-2.15.1 PyYAML-6.0.3 Pygments-2.21.0 asgiref-3.12.1 bandit-1.9.4 boolean.py-5.0 build-1.6.1 certifi-2026.10.19 cffi-2.1.1 charset-normalizer-3.5.2 colorama-0.4.6 cryptography-50.0.2 cyclonedx-python-lib-11.12.0 defusedxml-0.7.1 filelock-4.2.0 idna-3.20 license-expression-30.4.4 markdown-it-py-4.2.0 mdurl-0.1.2 msgpack-1.2.3 packageurl-python-0.17.6 packaging-26.3 pip-api-0.0.35 pip-audit-2.10.1 pip-requirements-parser-32.0.1 platformdirs-4.13.3 py-serializable-2.1.0 pycparser-3.11 pyparsing-3.3.3 pyproject_hooks-1.3.3 requests-2.34.2 rich-15.0.0 setuptools-82.0.1 sortedcontainers-2.4.0 sqlparse-0.6.0 stevedore-5.9.1 tomli-2.5.0 tomli-w-1.2.0 typing-extensions-4.16.0 tzdata-2026.5 urllib3-2.8.0 wheel-0.48.0
+[2026-10-21T18:34:33.778Z] 
+[2026-10-21T18:34:33.778Z] [notice] A new release of pip is available: 25.0.1 -> 26.2.2
+[2026-10-21T18:34:33.778Z] [notice] To update, run: C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1\.jenkins-venv\Scripts\python.exe -m pip install --upgrade pip
+[Pipeline] bat
+[2026-10-21T18:34:34.077Z] 
+[2026-10-21T18:34:34.077Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" -m build --wheel --no-isolation helper 
+[2026-10-21T18:34:37.357Z] * Getting build dependencies for wheel...
+[2026-10-21T18:34:43.923Z] running egg_info
+[2026-10-21T18:34:43.923Z] creating src\alert_helper.egg-info
+[2026-10-21T18:34:43.923Z] writing src\alert_helper.egg-info\PKG-INFO
+[2026-10-21T18:34:43.923Z] writing dependency_links to src\alert_helper.egg-info\dependency_links.txt
+[2026-10-21T18:34:43.923Z] writing top-level names to src\alert_helper.egg-info\top_level.txt
+[2026-10-21T18:34:43.923Z] writing manifest file 'src\alert_helper.egg-info\SOURCES.txt'
+[2026-10-21T18:34:43.923Z] reading manifest file 'src\alert_helper.egg-info\SOURCES.txt'
+[2026-10-21T18:34:43.923Z] writing manifest file 'src\alert_helper.egg-info\SOURCES.txt'
+[2026-10-21T18:34:47.212Z] * Building wheel...
+[2026-10-21T18:34:47.474Z] running bdist_wheel
+[2026-10-21T18:34:47.725Z] running build
+[2026-10-21T18:34:47.725Z] running build_py
+[2026-10-21T18:34:47.725Z] creating build\lib\alert_helper
+[2026-10-21T18:34:47.725Z] copying src\alert_helper\__init__.py -> build\lib\alert_helper
+[2026-10-21T18:34:47.725Z] running egg_info
+[2026-10-21T18:34:47.725Z] writing src\alert_helper.egg-info\PKG-INFO
+[2026-10-21T18:34:47.725Z] writing dependency_links to src\alert_helper.egg-info\dependency_links.txt
+[2026-10-21T18:34:47.725Z] writing top-level names to src\alert_helper.egg-info\top_level.txt
+[2026-10-21T18:34:47.725Z] reading manifest file 'src\alert_helper.egg-info\SOURCES.txt'
+[2026-10-21T18:34:47.725Z] writing manifest file 'src\alert_helper.egg-info\SOURCES.txt'
+[2026-10-21T18:34:47.725Z] installing to build\bdist.win-amd64\wheel
+[2026-10-21T18:34:47.725Z] running install
+[2026-10-21T18:34:47.725Z] running install_lib
+[2026-10-21T18:34:47.725Z] creating build\bdist.win-amd64\wheel
+[2026-10-21T18:34:47.725Z] creating build\bdist.win-amd64\wheel\alert_helper
+[2026-10-21T18:34:47.725Z] copying build\lib\alert_helper\__init__.py -> build\bdist.win-amd64\wheel\.\alert_helper
+[2026-10-21T18:34:47.725Z] running install_egg_info
+[2026-10-21T18:34:47.725Z] Copying src\alert_helper.egg-info to build\bdist.win-amd64\wheel\.\alert_helper-0.1.0-py3.12.egg-info
+[2026-10-21T18:34:47.725Z] running install_scripts
+[2026-10-21T18:34:47.725Z] creating build\bdist.win-amd64\wheel\alert_helper-0.1.0.dist-info\WHEEL
+[2026-10-21T18:34:47.725Z] creating 'C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\ity-assignment1-multibranch_PR-1\\helper\\dist\\.tmp-foblc1gk\\alert_helper-0.1.0-py3-none-any.whl' and adding 'build\\bdist.win-amd64\\wheel' to it
+[2026-10-21T18:34:47.725Z] adding 'alert_helper/__init__.py'
+[2026-10-21T18:34:47.725Z] adding 'alert_helper-0.1.0.dist-info/METADATA'
+[2026-10-21T18:34:47.725Z] adding 'alert_helper-0.1.0.dist-info/WHEEL'
+[2026-10-21T18:34:47.725Z] adding 'alert_helper-0.1.0.dist-info/top_level.txt'
+[2026-10-21T18:34:47.725Z] adding 'alert_helper-0.1.0.dist-info/RECORD'
+[2026-10-21T18:34:47.725Z] removing build\bdist.win-amd64\wheel
+[2026-10-21T18:34:47.725Z] Successfully built alert_helper-0.1.0-py3-none-any.whl
+[Pipeline] bat
+[2026-10-21T18:34:48.049Z] 
+[2026-10-21T18:34:48.049Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" -m pip install --no-deps helper\dist\alert_helper-0.1.0-py3-none-any.whl 
+[2026-10-21T18:34:49.965Z] Processing c:\programdata\jenkins\.jenkins\workspace\ity-assignment1-multibranch_pr-1\helper\dist\alert_helper-0.1.0-py3-none-any.whl
+[2026-10-21T18:34:49.965Z] Installing collected packages: alert-helper
+[2026-10-21T18:34:49.965Z] Successfully installed alert-helper-0.1.0
+[2026-10-21T18:34:49.965Z] 
+[2026-10-21T18:34:49.965Z] [notice] A new release of pip is available: 25.0.1 -> 26.2.2
+[2026-10-21T18:34:49.965Z] [notice] To update, run: C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1\.jenkins-venv\Scripts\python.exe -m pip install --upgrade pip
+[Pipeline] bat
+[2026-10-21T18:34:50.276Z] 
+[2026-10-21T18:34:50.276Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" -m pip check 
+[2026-10-21T18:34:52.805Z] No broken requirements found.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Dependency Approval)
+[Pipeline] bat
+[2026-10-21T18:34:53.304Z] 
+[2026-10-21T18:34:53.304Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" scripts\check_dependencies.py --report "reports\dependency-approval.json" 
+[2026-10-21T18:34:53.565Z] Dependency approval passed: 46 installed packages.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static Security Scan)
+[Pipeline] bat
+[2026-10-21T18:34:53.972Z] 
+[2026-10-21T18:34:53.972Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" -m bandit -r app -f json -o "reports\bandit.json" --exit-zero 
+[2026-10-21T18:34:54.910Z] [main]	INFO	profile include tests: None
+[2026-10-21T18:34:54.910Z] [main]	INFO	profile exclude tests: None
+[2026-10-21T18:34:54.910Z] [main]	INFO	cli include tests: None
+[2026-10-21T18:34:54.910Z] [main]	INFO	cli exclude tests: None
+[2026-10-21T18:34:54.910Z] [json]	INFO	JSON output written to file: reports\bandit.json
+[Pipeline] bat
+[2026-10-21T18:34:55.204Z] 
+[2026-10-21T18:34:55.204Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" -m bandit -r app -f screen --exit-zero  1>"reports\bandit.txt" 
+[2026-10-21T18:34:55.467Z] [main]	INFO	profile include tests: None
+[2026-10-21T18:34:55.467Z] [main]	INFO	profile exclude tests: None
+[2026-10-21T18:34:55.467Z] [main]	INFO	cli include tests: None
+[2026-10-21T18:34:55.467Z] [main]	INFO	cli exclude tests: None
+[2026-10-21T18:34:55.467Z] [main]	INFO	running on Python 3.12.10
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Dependency Audit)
+[Pipeline] bat
+[2026-10-21T18:34:56.077Z] 
+[2026-10-21T18:34:56.077Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" -m pip_audit -r requirements.txt --cache-dir .pip-audit-cache -f json -o "reports\pip-audit.json" 
+[2026-10-21T18:35:28.106Z] No known vulnerabilities found
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Security Gate)
+[Pipeline] bat
+[2026-10-21T18:35:28.568Z] 
+[2026-10-21T18:35:28.568Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" -m bandit -r app -lll 
+[2026-10-21T18:35:31.107Z] [main]	INFO	profile include tests: None
+[2026-10-21T18:35:31.107Z] [main]	INFO	profile exclude tests: None
+[2026-10-21T18:35:31.107Z] [main]	INFO	cli include tests: None
+[2026-10-21T18:35:31.107Z] [main]	INFO	cli exclude tests: None
+[2026-10-21T18:35:31.107Z] [main]	INFO	running on Python 3.12.10
+[2026-10-21T18:35:31.107Z] Run started:2026-10-21 18:35:30.818516+00:00
+[2026-10-21T18:35:31.107Z] 
+[2026-10-21T18:35:31.107Z] Test results:
+[2026-10-21T18:35:31.107Z] 	No issues identified.
+[2026-10-21T18:35:31.107Z] 
+[2026-10-21T18:35:31.107Z] Code scanned:
+[2026-10-21T18:35:31.107Z] 	Total lines of code: 245
+[2026-10-21T18:35:31.107Z] 	Total lines skipped (#nosec): 0
+[2026-10-21T18:35:31.107Z] 	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+[2026-10-21T18:35:31.107Z] 
+[2026-10-21T18:35:31.107Z] Run metrics:
+[2026-10-21T18:35:31.107Z] 	Total issues (by severity):
+[2026-10-21T18:35:31.107Z] 		Undefined: 0
+[2026-10-21T18:35:31.107Z] 		Low: 1
+[2026-10-21T18:35:31.107Z] 		Medium: 0
+[2026-10-21T18:35:31.107Z] 		High: 0
+[2026-10-21T18:35:31.107Z] 	Total issues (by confidence):
+[2026-10-21T18:35:31.107Z] 		Undefined: 0
+[2026-10-21T18:35:31.107Z] 		Low: 0
+[2026-10-21T18:35:31.107Z] 		Medium: 1
+[2026-10-21T18:35:31.107Z] 		High: 0
+[2026-10-21T18:35:31.107Z] Files skipped (0):
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Tests)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] bat
+[2026-10-21T18:35:31.543Z] 
+[2026-10-21T18:35:31.543Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" tests\test_dependency_gate.py  1>"reports\test_dependency_gate.txt" 2>&1 
+[Pipeline] bat
+[2026-10-21T18:35:31.837Z] 
+[2026-10-21T18:35:31.838Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" tests\test_store_sql.py  1>"reports\test_store_sql.txt" 2>&1 
+[Pipeline] bat
+[2026-10-21T18:35:34.026Z] 
+[2026-10-21T18:35:34.028Z] C:\ProgramData\Jenkins\.jenkins\workspace\ity-assignment1-multibranch_PR-1>".jenkins-venv\Scripts\python.exe" tests\test_flow.py  1>"reports\test_flow.txt" 2>&1 
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] archiveArtifacts
+[2026-10-21T18:35:44.308Z] Archiving artifacts
+[Pipeline] deleteDir
+[Pipeline] echo
+[2026-10-21T18:35:50.659Z] Secure build and tests passed.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timestamps
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+
+GitHub has been notified of this commit’s build result
+
+Finished: SUCCESS

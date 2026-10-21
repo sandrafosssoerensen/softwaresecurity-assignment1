@@ -1,0 +1,11 @@
+test_changed_version_fails (__main__.DependencyGateTests.test_changed_version_fails) ... ok
+test_exact_inventory_passes (__main__.DependencyGateTests.test_exact_inventory_passes) ... ok
+test_missing_package_fails (__main__.DependencyGateTests.test_missing_package_fails) ... ok
+test_package_name_normalization (__main__.DependencyGateTests.test_package_name_normalization) ... ok
+test_unapproved_package_fails (__main__.DependencyGateTests.test_unapproved_package_fails) ... ok
+test_unpinned_requirement_fails (__main__.DependencyGateTests.test_unpinned_requirement_fails) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.007s
+
+OK

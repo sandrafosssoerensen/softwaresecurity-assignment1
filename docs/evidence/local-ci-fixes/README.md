@@ -1,7 +1,23 @@
-# Local verification of the CI fixes
+# Local verification of the CI test-harness fixes
 
 These are local results, not a new Jenkins build. The older Jenkins
 comparison reports remain unchanged in the neighbouring `jenkins/` folder.
+
+## Why this folder exists
+
+This folder records checks performed directly from PowerShell while the
+Jenkins pipeline and test harness were being corrected. It demonstrates that:
+
+- a clean, approved dependency inventory is accepted
+- an extra package is rejected
+- failed SQL and HTTP suites produce nonzero exit codes
+- separately allocated test ports allow concurrent branch tests
+- the corrected and vulnerable code produce different security results
+
+These files helped verify the implementation before pushing it. They do not
+prove that Jenkins ran a build, received a webhook, archived artifacts, or
+discovered a pull request. Use the neighbouring `jenkins` folders for that
+evidence.
 
 | Branch | Latest local comparison commit |
 |---|---|
@@ -77,14 +93,17 @@ Building the standalone helper wheel succeeded, but reading that generated
 wheel in a later command encountered a Windows file-permission error.
 For the clean local environment, `pip install --no-deps --no-build-isolation ./helper`
 successfully built and installed the helper through pip's temporary wheel.
-The new Jenkins run must still verify its normal explicit wheel-install step.
+Current successful Jenkins builds passed the normal explicit wheel-build and
+installation steps. Their complete console exports are still pending.
 
-## What remains to demonstrate in Jenkins
+## Relationship to the current Jenkins runs
 
-Push the three updated branches after reviewing the changes. Export complete
-console logs and artifacts for a corrected success and an intentionally
-blocked vulnerable run. Also demonstrate a SQL-only failure while HTTP passes,
-a successful automatic push build, and a pull-request build.
+Jenkins has now displayed successful current builds for `main`,
+`assignment-work`, and `fixed-version`. It has also displayed blocked builds
+for `vulnerable-version` and `experiment-composition-isolated`. Their complete
+console logs and artifacts still need to be copied into the placeholders in
+the neighbouring `jenkins` folder. A pull-request build also remains to be
+demonstrated.
 
 The inventory gate checks package names and versions after installation.
 It does not verify package contents or isolate installation scripts.

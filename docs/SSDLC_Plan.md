@@ -29,10 +29,12 @@ them. The interface is an API. Registration, website pages, background jobs,
 and public hosting are outside this small prototype's scope.
 
 The processor returns a development stub: a fixed-format result used in
-place of a real model. The original plan mentioned later Ollama integration,
-but this was not implemented and is not required by the assignment.
+place of a real model. Ollama integration is outside the assignment scope.
 The demonstrated setup uses separate local processes. Containers are an
-optional setup that has not yet been tested.
+optional setup. The Compose configuration later passed a local build,
+three-component health check, and authenticated create/read/delete smoke test.
+This additional result does not change the original architecture decision or
+make the development configuration production-ready.
 
 ## Four phases and gates
 
@@ -44,7 +46,7 @@ example, “all required authorization tests must pass” is a testing gate.
 | Requirements | Define operations, data to protect, service boundaries, permissions, threats, and controls before coding. | The original plan/design were committed first. [Design](Design.md) gives the current explanation. |
 | Implementation/build | Build three services, install the helper, make setup repeatable, and reject unapproved packages or files. | Services and helper work. The new dependency-approval stage checks installed names and exact versions before application tests. |
 | Testing | Use fresh test data, check allowed/denied requests, demonstrate flaws, and repeat tests after fixes. Required failures must stop release. | Local corrected runs pass 17 tests including six gate tests, one direct SQL test, and ten HTTP tests. The vulnerable application still fails four HTTP tests and one direct SQL test. Tests use separate allocated ports, and Jenkins checks each suite's exit code. |
-| Release/deploy/operation | Review the report/evidence and explain what production operation would need. | Production needs are documented. The final report and handover checks remain. No production deployment was performed. |
+| Release/deploy/operation | Review the report/evidence and explain what production operation would need. | Production needs and deployment limitations are documented. Production deployment is outside the prototype scope. |
 
 ## Asset, threat, control, activity, evidence, and gate
 
@@ -96,24 +98,20 @@ high-only static gate. The SQL test checks the actual query behavior.
 The Bandit report commands use `--exit-zero` to save findings without
 stopping at the report step. A separate command applies the static gate.
 The saved comparison has both failing vulnerable tests and passing fixed
-tests. Build #10 also shows successful operation after fixing Python PATH.
+tests. Current Jenkins builds have displayed successful corrected branches
+and deliberately blocked vulnerable and isolated-composition branches. The
+[Jenkins evidence index](evidence/jenkins/README.md) records build artifacts
+and provenance.
 
-## Remaining work
+## Evidence formats
 
-[Verification](Verification.md#remaining-work)
-contains the complete checklist. The main remaining issues are:
-
-- Run the updated pipeline in Jenkins on the corrected and vulnerable branches.
-- Save a SQL-only failure run to demonstrate that later passing tests cannot
-  hide it, then restore the corrected version.
-- Complete successful automatic push and pull-request build evidence is missing.
-
-Text/JSON reports are saved. JUnit XML and service-log reports are not
-currently produced/preserved.
+The pipeline archives text and JSON reports. It does not generate JUnit XML
+or preserve temporary service logs. [Verification](Verification.md) explains
+the evidence coverage and limitations.
 
 [Requirements traceability](Requirements_Traceability.md) connects the work
 to the assignment requirements.
 
-For production, discuss encrypted connections, separate service accounts and
-file access, key replacement/cancellation, rate limits, monitoring, backups,
-and a real processing model if needed. These are future operating needs.
+A production release would require encrypted connections, separate service
+accounts and file access, key replacement and cancellation, rate limits,
+monitoring, backups, and an assessed processing model.

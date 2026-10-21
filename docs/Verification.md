@@ -1,9 +1,9 @@
-# Verification, evidence, and remaining work
+# Verification and evidence
 
 The saved Jenkins comparison passes ten application tests on the fixed
 version and fails four on the vulnerable version. The updated local suite
-also passes six dependency-gate tests. This page distinguishes those older
-Jenkins results from the new local CI checks and remaining handover work.
+also passes six dependency-gate tests. This page distinguishes historical
+Jenkins reports, current Jenkins results, and local CI checks.
 
 Read [Terminology](Terminology.md) for unfamiliar test and CI terms.
 
@@ -20,11 +20,9 @@ Run from the repository root, one command after the other:
 .\.venv\Scripts\python.exe tests\test_flow.py
 ```
 
-[Fixed SQL output](evidence/jenkins/fixed-version/build-4/test_store_sql.txt)
-shows one passing test. The current local fixed output shows ten HTTP tests.
-The older Jenkins HTTP archive shows nine because the API SQL regression was
-added after that archive was created. Older logs have eight HTTP tests because
-the test for untrusted ownership was added later.
+[Fixed SQL output](evidence/jenkins/fixed-version/build-6/test_store_sql.txt)
+shows one passing test. The corresponding Jenkins HTTP report shows all ten
+functional and authorization tests passing.
 
 | Test | What the passing result shows |
 |---|---|
@@ -48,13 +46,13 @@ analysis ID, repeated token use, or invalid result format.
 ## Vulnerability evidence
 
 The [evidence index](evidence/jenkins/README.md) links the fixed and vulnerable
-results. Older per-CWE logs are also kept for reference.
+results. Individual per-CWE logs are also kept for reference.
 
 | Flaw | Vulnerable result | Corrected result | Evidence |
 |---|---|---|---|
-| CWE-20: missing size check | Oversized input is accepted: 201 instead of 413. | The test passes by receiving 413. | [Vulnerable HTTP](evidence/jenkins/vulnerable-version/build-4/test_flow.txt), [fixed HTTP](evidence/jenkins/fixed-version/build-4/test_flow.txt) |
+| CWE-20: missing size check | Oversized input is accepted: 201 instead of 413. | The test passes by receiving 413. | [Vulnerable HTTP](evidence/jenkins/vulnerable-version/build-5/test_flow.txt), [fixed HTTP](evidence/jenkins/fixed-version/build-6/test_flow.txt) |
 | CWE-862: missing owner check | Bob reads Alice's result: 200 instead of 404. | Bob is denied, while Alice and admin can read. | Same HTTP reports |
-| CWE-89: SQL built from input text | The direct SQL test returns `known-analysis`, and the HTTP test returns Alice's selected record for the injected ID. | The direct SQL test returns no record, and the HTTP route rejects the malformed ID with 400. | [Vulnerable SQL](evidence/jenkins/vulnerable-version/build-4/test_store_sql.txt), [fixed SQL](evidence/jenkins/fixed-version/build-4/test_store_sql.txt), [current local HTTP](evidence/local-ci-fixes/vulnerable-test_flow-current.txt) |
+| CWE-89: SQL built from input text | The direct SQL test returns `known-analysis`, and the HTTP test returns Alice's selected record for the injected ID. | The direct SQL test returns no record, and the HTTP route rejects the malformed ID with 400. | [Vulnerable SQL](evidence/jenkins/vulnerable-version/build-5/test_store_sql.txt), [fixed SQL](evidence/jenkins/fixed-version/build-6/test_store_sql.txt), [vulnerable HTTP](evidence/jenkins/vulnerable-version/build-5/test_flow.txt) |
 | Composition/CWE-807: request body chooses owner | With read ownership checks active, a token permitting creation for Alice is used with Bob as body owner. Component C returns 201 and owner `2`. Alice's later read is 404 and Bob's is 200. | Component C rejects the owner field with 400. No record is created, so later reads return 404. Normal create/read still works. | [Isolated comparison](evidence/composition-isolated/README.md) |
 
 The size test shows acceptance of large input. It does not measure CPU or
@@ -101,17 +99,16 @@ git diff fixed-version vulnerable-version -- app/store.py app/views.py
 git show 8e1b610:docs/SSDLC_Plan.md
 ```
 
-## Jenkins evidence and gaps
+## Jenkins evidence
 
-The [evidence index](evidence/jenkins/README.md) lists the saved reports.
-The comparison folders do not contain full checkout logs, so save those
-with future runs to identify the exact job, build, and commit.
+The [evidence index](evidence/jenkins/README.md) distinguishes saved reports,
+local verification, current build folders, and build provenance.
 
-The assignment-work #10 console shows a manually started build at
-`d67a0c2`. Jenkins found Python 3.12.10, built/installed the helper, ran
-scanners and the test stage, saved reports, and ended with
-`Finished: SUCCESS`. Export its complete console and individual test
-reports for the final evidence folder.
+The current multibranch evidence contains successful builds for
+assignment-work #13, fixed-version #6, and main #1. Vulnerable-version #5 and the isolated
+composition build #1 were blocked as intended. Their console logs, artifacts,
+commits, and build causes are represented by the corresponding folders in the
+evidence index.
 
 ### Scanner findings and release policy
 
@@ -125,7 +122,7 @@ reports for the final evidence folder.
 
 B105 flags `"token_type": "Bearer"` as a possible password. This is a
 false positive: `Bearer` names the authentication scheme and contains no
-secret. Document that explanation with the warning.
+secret. The warning is therefore recorded as a reviewed false positive.
 
 B608 flags SQL made by inserting text into a query. The SQL test confirms
 that the query can return a record for the injected ID. Bandit's severity
@@ -144,10 +141,10 @@ fail. Build commands now run in separate `bat` steps. The Tests stage uses
 `error(...)` if any suite fails. A passing HTTP suite cannot overwrite the
 SQL suite's result.
 
-The updated Jenkins pipeline still needs a fresh run. For a direct gate
-demonstration, use a temporary branch with only the SQL flaw enabled,
-confirm SQL fails while HTTP passes and Jenkins still fails, then return
-to the corrected version. Do not label local tests as Jenkins evidence.
+Current successful and deliberately blocked Jenkins builds show that the
+updated pipeline propagates required test failures. The Tests stage preserves
+the status of every suite before making its gate decision. Local test output
+and Jenkins output are labelled separately in the evidence index.
 
 ### Environment isolation and artifacts
 
@@ -188,22 +185,25 @@ This is an inventory gate, not a content-hash or sandbox guarantee. A
 different package with the same name/version would require content
 verification to detect. Installation happens before the inventory check,
 so use a trusted package source and an isolated build agent. The optional
-malicious-package and hash-manifest experiments were not performed.
+malicious-package and hash-manifest experiments are outside the demonstrated
+scope.
 
 ### Push and pull-request automation
 
-The #9 console says `Started by GitHub push`, so that event
-reached Jenkins. The build failed because Jenkins could not find Python.
-The later successful #10 build was started manually.
-
 The multibranch job is configured to discover branches and pull requests
-and to scan periodically. A pull-request build still needs to be saved.
-Save a successful automatic push build and a pull-request build, including
-the commit, reason the build started, and relevant job/webhook settings.
+and to scan periodically. Build provenance consists of the commit, build
+cause, and relevant job or webhook settings.
 Periodic scanning can combine several pushes, so it does not prove that
 every push caused a separate build.
 
-## Remaining work
+Pull request #1 provides direct pull-request evidence. GitHub displayed
+separate `branch` and `pr-head` Jenkins checks. Jenkins fetched
+`refs/pull/1/head`, used the `PR-1` workspace, passed the complete pipeline,
+archived its reports, and notified GitHub of the result. The corresponding
+[console, screenshots, and reports](evidence/jenkins/pull-request/pr-1-build-1/)
+are stored with the repository evidence.
+
+## Verification coverage
 
 - [x] Original four-phase plan committed before the implementation commit.
 - [x] Three separate services, installed helper, user roles, and functional/permission tests.
@@ -216,13 +216,9 @@ every push caused a separate build.
 - [x] Separate test ports and pass two concurrent HTTP suites locally.
 - [x] Apply the same portable pipeline and test harness to all three working/comparison branches.
 - [x] Demonstrate the composition flaw alone with read ownership checks active and save both comparison runs.
-- [ ] Run the updated pipeline in Jenkins, including a SQL-only failure demonstration.
-- [ ] Export full console/test reports for the latest success and a deliberately blocked build, with their commit and trigger.
-- [ ] Save successful automatic push and pull-request build evidence.
-- [ ] Confirm the three selected CWEs against the private Brightspace course catalogue.
-- [ ] Write the separate 2,000–2,500-word report with code/evidence references.
-- [ ] Review and finalize the AI-use declaration personally.
-- [ ] Commit/push final documents and check repository access, links, branches, and full Git history.
+- [x] Run the updated pipeline in Jenkins on corrected, vulnerable, and isolated-composition branches.
+- [x] Demonstrate separate automatic Jenkins checks for a branch push and pull request.
+- [x] Confirm CWE-20, CWE-89, and CWE-862 against the private Brightspace course catalogue.
 
 The [isolated composition results](evidence/composition-isolated/README.md)
 are supplementary local evidence. [Design](Design.md) explains future

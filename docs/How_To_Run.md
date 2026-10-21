@@ -2,8 +2,8 @@
 
 This guide shows how to install and use the corrected application, run its
 tests, compare versions, and access Jenkins. It also includes an optional
-ZAP scan. [Verification](Verification.md) lists saved results and unfinished
-work. [Terminology](Terminology.md) explains technical words used here.
+ZAP scan. [Verification](Verification.md) records test results and evidence
+limitations. [Terminology](Terminology.md) explains technical words used here.
 
 The application processes test alerts from an intrusion detection system
 (IDS). Three Django services run as separate programs:
@@ -154,7 +154,7 @@ Invoke-RestMethod http://127.0.0.1:8002/health
 
 Send user requests to component A. Component B and component C have routes intended for requests from other
 services. The word `internal` in those routes does not itself protect them.
-they still need token and permission checks.
+They are protected by token and permission checks.
 
 ## 5. Use the application
 
@@ -374,7 +374,9 @@ git switch assignment-work
 The expected Jenkins result is red for `vulnerable-version` and green for
 the corrected versions. The saved comparison shows the intended failures.
 The updated Jenkinsfile checks each suite's exit code, including the SQL
-suite even if the later HTTP suite passes. Verify this in a new Jenkins run.
+suite even if the later HTTP suite passes. Current Jenkins builds show green
+corrected versions and a blocked combined vulnerable version. A separate
+SQL-only Jenkins experiment is optional.
 See [Verification](Verification.md#failure-propagation).
 `--exit-zero` saves/displays findings without making the scan command fail.
 
@@ -478,9 +480,9 @@ a clone alone does not create them.
 ### 8.3 Automatic triggers, gates, and archived output
 
 The current job periodically checks the repository for changes. Push delivery
-also appeared in the assignment-work #9 console. The later manually
-started #10 run succeeded after the PATH correction. A successful automatic
-push run and a pull-request (PR) build still need complete saved evidence.
+appeared in the assignment-work #9 console, and current corrected and
+vulnerable branch builds have run with the updated pipeline. The Jenkins
+evidence index distinguishes automatic, periodic, and manual build causes.
 
 A webhook is a notification GitHub sends to Jenkins after an event such as
 a push. GitHub must be able to reach Jenkins' `/github-webhook/` route.
@@ -503,7 +505,7 @@ requirements files and `ci/approved-local.txt`. To reproduce that stage,
 use a fresh environment and include `-r requirements-ci.txt` when installing
 requirements. Your ordinary development environment may contain extra tools
 that correctly fail the approval check.
-See [Verification](Verification.md#jenkins-evidence-and-gaps).
+See [Verification](Verification.md#jenkins-evidence).
 
 HTTP suites can run concurrently because they allocate separate test ports.
 `disableConcurrentBuilds()` additionally prevents overlap within one branch job.
@@ -511,9 +513,9 @@ HTTP suites can run concurrently because they allocate separate test ports.
 ### 8.4 Optional OWASP ZAP assessment
 
 OWASP ZAP checks a running web service for possible security problems.
-It is an optional extra here. The functional and permission tests are still needed.
-No ZAP report is saved yet. To try it, use the local test environment,
-start the three services from section 4, and target component A at:
+It is outside the demonstrated verification scope and does not replace the
+functional or permission tests. An optional assessment uses the local test
+environment and targets component A at:
 
 ```text
 http://127.0.0.1:8000
@@ -571,9 +573,13 @@ to compare with earlier runs.
 ## 11. Known limitations
 
 The current processor builds a fixed development summary instead of using
-a real model. Its accuracy as a real threat assessment has not been tested.
-Docker Compose has not been verified by running it here. Encrypted transport,
-key replacement, reliable background processing, monitoring, and model
-assessment are future production needs. The assignment does not require
-Ollama or Docker specifically. Remaining required work is listed in
-[Verification](Verification.md#remaining-work).
+a real model. It is not intended or evaluated as a real threat-assessment
+model.
+The optional Docker Compose setup has passed a local build, three-component
+health check, and authenticated create/read/delete smoke test on Rancher
+Desktop. This does not establish production-grade container isolation.
+Encrypted transport, key replacement, reliable background processing,
+monitoring, and model assessment are future production needs. The assignment
+does not require Ollama or Docker specifically. The sanitized output is in
+[Docker evidence](evidence/docker/README.md). Test and CI limitations are
+described in [Verification](Verification.md).

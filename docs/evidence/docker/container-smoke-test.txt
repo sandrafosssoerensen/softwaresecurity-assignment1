@@ -1,0 +1,53 @@
+Docker Compose smoke test
+Date: 2026-10-21
+Branch: assignment-work
+Commit: 288dde6
+Runtime: Rancher Desktop with dockerd (moby)
+
+COMMAND
+docker compose build
+
+RESULT
+[+] build 3/3
+Image software-security-v1-a Built
+Image software-security-v1-b Built
+Image software-security-v1-c Built
+
+COMMAND
+docker compose up -d
+docker compose ps
+
+RESULT
+Network software-security-v1_default Created
+Container software-security-v1-a-1 Started
+Container software-security-v1-b-1 Started
+Container software-security-v1-c-1 Started
+Component A published 127.0.0.1:8000 to container port 8000.
+Components B and C had no host port published.
+
+COMMAND
+Invoke-RestMethod http://127.0.0.1:8000/health
+
+RESULT
+service: A
+status: ok
+
+COMMAND
+docker compose exec a python -c "import requests; print(requests.get('http://b:8000/health').json()); print(requests.get('http://c:8000/health').json())"
+
+RESULT
+{'service': 'B', 'status': 'ok'}
+{'service': 'C', 'status': 'ok'}
+
+END-TO-END RESULT THROUGH COMPONENT A
+created_owner: 1
+model: development-stub
+alice_read_owner: 1
+bob_read_status: 404
+alice_delete_status: 403
+admin_read_owner: 1
+admin_delete_status: 204
+alice_read_after_delete: 404
+
+The temporary analysis created by this smoke test was deleted by the
+administrator at the end of the test. Authentication tokens are omitted.
