@@ -1,13 +1,53 @@
-# AI-use declaration (draft)
+# AI-use declaration
 
-AI assistance was used for:
+ChatGPT/Codex was used for coding, explanations, tests, troubleshooting, and
+documentation. The following list describes that assistance.
 
-- Discussing and documenting requirements, architecture, security controls, and the SSDLC plan.
-- Producing the initial Django implementation of components A, B, and C, including authentication, scoped JWTs, database access, the helper package, and a model stub.
-- Producing setup scripts, Docker configuration, README instructions, and eight integration tests.
-- Running the initial integration tests in the assistant's execution environment and drafting a record of their outcomes.
-- Editing the initial report section and project documentation.
+## Assistance used
 
-The project domain, functional requirements, access rules, and design choices were developed through discussion with Sandra Foss Sørensen. The initial implementation and tests were written by the assistant. At this stage, the integration tests have passed in the assistant's environment; they have not yet been verified on the student's computer. Real Ollama integration, vulnerability experiments, Docker execution, and Jenkins runs remain pending.
+AI helped with:
 
-Update this draft to reflect subsequent work, review, modifications, and experiments, and use the university's required declaration format for submission.
+- Understanding the assignment, planning the three services, identifying
+  trust boundaries, and writing the first four-phase security plan.
+- Generating and explaining substantial parts of the Django code, login
+  checks, signed tokens, database access, helper package, and development
+  summary.
+- Creating setup/start scripts, optional container configuration, and the
+  first integration tests, which check several services working together.
+- Adding SQL and ownership tests and fixing Windows process/log cleanup
+  problems.
+- Preparing vulnerable code versions, managing branch/commit workflows,
+  collecting output, and interpreting vulnerable/fixed results.
+- Adding a focused composition experiment with read ownership checks active,
+  running the fixed and isolated versions locally, and documenting the evidence.
+- Writing and troubleshooting Jenkins configuration, Python PATH,
+  Bandit/pip-audit steps, branch discovery, GitHub access, and triggers.
+- Drafting and revising the README, design/threat model, SSDLC plan,
+  requirement checklist, run/learning guides, results, and this declaration.
+- Checking explanations against code and saved results, identifying CI
+  issues, and rewriting documentation in plain English.
+
+The assistance included generated code and text. It was more extensive than
+proofreading.
+
+## Work carried out
+
+The repository owner ran commands, tests, security experiments, and Jenkins
+jobs, configured GitHub/Jenkins, managed commits, and supplied console logs
+and reports. The historical saved Jenkins reports contain nine passing HTTP
+tests and one passing direct SQL test. The current local evidence contains
+ten passing HTTP tests and one passing direct SQL test on the corrected
+branch. The newer vulnerable local run shows four HTTP failures and one
+direct SQL failure.
+
+[Verification](Verification.md) contains the test results and known limitations.
+
+Before submitting, add a personal description of which code and results you
+checked, what you changed yourself, and any further AI use for the report.
+
+## Before submitting
+
+- Check that this list accurately describes the assistance used.
+- Add a personal account of code review, changes, and understanding.
+- Include any further AI use for the report or remaining implementation.
+- Check the course/university declaration requirements linked in the assignment.

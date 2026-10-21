@@ -1,0 +1,14 @@
+test_injected_analysis_id_does_not_return_a_record (__main__.StoreSqlTests.test_injected_analysis_id_does_not_return_a_record) ... FAIL
+
+======================================================================
+FAIL: test_injected_analysis_id_does_not_return_a_record (__main__.StoreSqlTests.test_injected_analysis_id_does_not_return_a_record)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\ProgramData\Jenkins\.jenkins\workspace\1-multibranch_vulnerable-version\tests\test_store_sql.py", line 42, in test_injected_analysis_id_does_not_return_a_record
+    self.assertIsNone(result)
+AssertionError: {'id': 'known-analysis', 'owner': '1', 'marker': 'test-record'} is not None
+
+----------------------------------------------------------------------
+Ran 1 test in 0.026s
+
+FAILED (failures=1)

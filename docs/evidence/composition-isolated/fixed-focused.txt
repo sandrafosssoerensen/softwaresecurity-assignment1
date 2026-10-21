@@ -1,0 +1,7 @@
+test_delegated_create_cannot_assign_another_owner (__main__.CompositionIsolationTests.test_delegated_create_cannot_assign_another_owner) ... COMPOSITION_OBSERVATION {"admin_read": 404, "alice_read": 404, "anonymous_read": 401, "bob_observed_owner": null, "bob_read": 404, "body_owner_id": "2", "create_status": 400, "create_token_delete": 403, "created_error": "INVALID_FIELDS", "created_owner": null, "delegated_permission": {"analysis_id": "d6424151-f257-4650-9f6d-96b486ce7014", "aud": "C", "scope": "create", "sub": "1"}, "normal_alice_read": 200, "normal_bob_read": 404}
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 20.027s
+
+OK

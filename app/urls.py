@@ -3,6 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [path("health", views.health)]
+
 if settings.SERVICE == "A":
     urlpatterns += [path("auth/token", views.login), path("analyses", views.public_analyses),
                     path("analyses/<str:analysis_id>", views.public_analyses)]

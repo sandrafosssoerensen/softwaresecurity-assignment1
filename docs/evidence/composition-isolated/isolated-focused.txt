@@ -1,0 +1,15 @@
+test_delegated_create_cannot_assign_another_owner (__main__.CompositionIsolationTests.test_delegated_create_cannot_assign_another_owner) ... COMPOSITION_OBSERVATION {"admin_read": 200, "alice_read": 404, "anonymous_read": 401, "bob_observed_owner": "2", "bob_read": 200, "body_owner_id": "2", "create_status": 201, "create_token_delete": 403, "created_error": null, "created_owner": "2", "delegated_permission": {"analysis_id": "2e3355d1-e543-4f7a-9bbc-55f7112be8f7", "aud": "C", "scope": "create", "sub": "1"}, "normal_alice_read": 200, "normal_bob_read": 404}
+FAIL
+
+======================================================================
+FAIL: test_delegated_create_cannot_assign_another_owner (__main__.CompositionIsolationTests.test_delegated_create_cannot_assign_another_owner)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\sandr\Desktop\3.SemesterKandidat\3semestercomputerscience\SS\Assignment 1\software-security-v1\software-security-v1\.runtime\worktrees\composition-isolated\tests\test_composition_isolated.py", line 90, in test_delegated_create_cannot_assign_another_owner
+    self.assertEqual(created.status_code, 400, json.dumps(observation, sort_keys=True))
+AssertionError: 201 != 400 : {"admin_read": 200, "alice_read": 404, "anonymous_read": 401, "bob_observed_owner": "2", "bob_read": 200, "body_owner_id": "2", "create_status": 201, "create_token_delete": 403, "created_error": null, "created_owner": "2", "delegated_permission": {"analysis_id": "2e3355d1-e543-4f7a-9bbc-55f7112be8f7", "aud": "C", "scope": "create", "sub": "1"}, "normal_alice_read": 200, "normal_bob_read": 404}
+
+----------------------------------------------------------------------
+Ran 1 test in 20.687s
+
+FAILED (failures=1)

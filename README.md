@@ -1,69 +1,272 @@
-# Software Security — Minimal V1 Starter
+# Software Security Assignment I — Alert-analysis prototype
 
-This is the first implementation milestone, not the completed assignment. Three Django processes implement a synchronous A → B → C alert-analysis flow. A authenticates seeded users; B uses the separately installed helper package and a labelled development model stub; C saves analyses and enforces resource permissions.
+This Python/Django application accepts an invented test alert from an
+intrusion detection system (IDS). It checks the data, produces a short
+development summary, and stores the result for the user who submitted it.
+Users can log in, create, list, and read analyses. Only an administrator
+can delete them.
 
-**Implemented:** login; create/save/list/read/delete; RS256 scoped JWTs; owner/admin checks; input size/field validation; result-schema validation; separate SQLite files; 8 HTTP integration tests.
+Three services run as separate programs and communicate using HTTP:
 
-**Still required:** real Ollama integration; isolated versions and measured evidence for the four vulnerabilities; Jenkins pipeline and actual push/PR runs; dependency approval/static/dependency analysis gates; final report and complete AI declaration. The current model stub returns a fixed test response. The Docker Compose configuration has not yet been tested. Django runserver is used only for the local lab.
+- Component A checks logins and sends requests to the other services.
+- Component B checks the alert and produces the result using the installed
+  `alert-helper` package.
+- Component C stores results and checks who may access them.
 
-## Setup (PowerShell, Python 3.12)
+Creating an analysis uses all three services. The database stores records,
+and the helper is an installed Python package. Neither is an extra service.
 
-Extract the ZIP and open a terminal in the `software-security-v1` folder. Preserve the included Git history.
+Read [How to run](docs/How_To_Run.md) for commands,
+[Design](docs/Design.md) for the explanation, and
+[Terminology](docs/Terminology.md) for technical words in plain English.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Client[API client] --> CA[Component A: login and requests]
+    CA -->|Create an analysis| CB[Component B: alert processing]
+    CB -->|Store the result| CC[Component C: storage and access checks]
+    CA -->|List, read, or delete| CC
+```
+
+Each component runs as a separate process and communicates over HTTP.
+Creating an analysis uses component A, component B, and component C.
+Listing, reading, and deleting go from component A directly to component C.
+Responses return through the components that handled the request.
+
+## Versions and results
+
+| Branch | Purpose | Saved result |
+|---|---|---|
+| `assignment-work` | Corrected application and current documents | Jenkins build #10 succeeded at commit `d67a0c2` after Jenkins could find Python through PATH. |
+| `fixed-version` | Corrected version used for comparison | Ten HTTP tests and one direct SQL test pass. |
+| `vulnerable-version` | Version with four deliberately enabled security flaws | Four HTTP tests and one direct SQL test fail where they check the broken protections. |
+| `experiment-composition-isolated` | Supplementary experiment with only the composition flaw enabled | Nine ordinary HTTP tests pass and only the owner-field test fails. The focused comparison confirms that read ownership checks remain active. |
+
+The [evidence index](docs/evidence/jenkins/README.md) links the saved reports.
+Bandit finds unsafe SQL construction (B608/CWE-89) in the vulnerable version.
+Both versions have a B105 warning for `Bearer`. It is a false positive:
+the word names the token scheme and is not a password.
+The saved dependency audits found no known vulnerabilities in the packages
+they checked at that time.
+
+The updated pipeline checks command results and approved package versions.
+HTTP tests use separate automatically allocated ports. These changes have
+local test evidence. New Jenkins push and pull-request runs still need to be
+saved. See [Verification](docs/Verification.md#remaining-work).
+
+## Four vulnerabilities and their fixes
+
+The vulnerable branch enables three selected weaknesses and one additional
+flaw caused by how the components work together. The corrected branches
+keep the protections below active.
+
+| Vulnerability | What goes wrong | Fix in the corrected version |
+|---|---|---|
+| CWE-20 — missing input-size check | Component B accepts alerts above the intended processing limit. | Reject alert JSON larger than 65,536 bytes with HTTP 413. |
+| CWE-862 — missing ownership check | Bob can read an analysis owned by Alice. | Component C allows reads only for the owner or an administrator. |
+| CWE-89 — SQL injection | An ID inserted directly into an SQL query can change what the query returns. | Pass the ID as an SQL parameter instead of inserting it into query text. |
+| Composition flaw, CWE-807 — trusting a request's owner field | Component C accepts an owner chosen in the body even though component A's signed token names the authorized user. | Reject the extra owner field and store the user ID from the verified token. |
+
+The SQL experiment has two complementary checks. The direct SQL test isolates
+the storage query. The HTTP test sends an injected analysis ID through
+Component A and Component C. On the vulnerable branch, the GET experiment
+allows that input to reach the unsafe query. On the corrected branches, the
+ID format check rejects it before the query runs. The HTTP test uses Alice's
+own record, so it does not depend on the separate missing ownership check.
+The [isolated composition experiment](docs/Composition_Isolation.md) shows
+the wrong-owner write while read ownership checks remain active. Bob cannot
+read Alice's ordinary record, but he can read the new record wrongly assigned
+to him using a permission for Alice. The corrected version rejects that write.
+See the [experiment guide](docs/Vulnerability_Experiments_Guide.md) for inputs,
+code changes, and the corresponding test results.
+
+## Setup — Windows PowerShell and Python 3.12
+
+Run commands in the folder containing `manage.py`, `Jenkinsfile`, and
+`requirements.txt`. In the extracted workspace this is the inner
+`software-security-v1/software-security-v1` folder.
+
+For a fresh clone, with access to the private repository:
+
+```powershell
+git clone --branch assignment-work https://github.com/sandrafosssoerensen/softwaresecurity-assignment1.git
+cd softwaresecurity-assignment1
+```
+
+If you already have the repository, use that copy. Keep the full Git history.
+A source ZIP downloaded from GitHub does not include the `.git` folder.
+
+Create a virtual environment, install packages, build/install the helper,
+and create test accounts:
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-build.txt
 .\.venv\Scripts\python.exe -m build --wheel --no-isolation helper
-.\.venv\Scripts\python.exe -m pip install --no-deps helper/dist/alert_helper-0.1.0-py3-none-any.whl
-.\.venv\Scripts\python.exe scripts/setup_lab.py
+.\.venv\Scripts\python.exe -m pip install --no-deps helper\dist\alert_helper-0.1.0-py3-none-any.whl
+.\.venv\Scripts\python.exe scripts\setup_lab.py
 ```
 
-Known lab accounts: `alice`, `bob`, `admin`. Password for all three: `Lab-only-Password-123!`. These are synthetic teaching accounts, never production credentials. Private keys and runtime databases are generated locally and excluded from Git and the ZIP. Only A needs the private key.
+A virtual environment keeps this project's Python packages separate.
+If the Windows `py` launcher is unavailable, check that
+`python --version` shows Python 3.12 and use
+`python -m venv .venv` instead.
 
-## Run three local processes
+The project-owned package is `alert-helper==0.1.0`, described in
+[helper/pyproject.toml](helper/pyproject.toml). It is installed as a wheel,
+an installable Python package file. Component B uses its functions to select and
+check alert fields. Component A and component C also use its checks through the shared views.
 
-In three terminals, from the project folder:
+Setup creates `alice` and `bob` as ordinary users and `admin` as the
+administrator. All have the synthetic lab password
+`Lab-only-Password-123!`. It also creates the signing keys and component A's user
+database. Running setup again resets the test passwords but does not delete
+component C's stored analyses. Keys and databases are under `.runtime/`, which Git
+ignores.
+
+## Run and use
+
+Open three terminals in the repository root. Run one command in each:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/serve.py A
-.\.venv\Scripts\python.exe scripts/serve.py B
-.\.venv\Scripts\python.exe scripts/serve.py C
+.\.venv\Scripts\python.exe scripts\serve.py A
 ```
-
-A is on localhost:8000, B on :8001, C on :8002. The local-process mode exposes all three on loopback for learning/testing; Compose publishes only A.
-
-Use an API client to POST `/auth/token` on A with JSON username/password. Use the returned access token in `Authorization: Bearer ...`. POST `examples/request.json` to `/analyses`. GET `/analyses` or `/analyses/{id}`. DELETE `/analyses/{id}` requires an admin token. POST returns 201 only after C saves the analysis.
-
-## Test
 
 ```powershell
-.\.venv\Scripts\python.exe tests/test_flow.py
+.\.venv\Scripts\python.exe scripts\serve.py B
 ```
-
-Tests use isolated temporary databases/keys and three server processes on ports 18000–18002. Keep these ports free. No real model is needed. Tests clean up their processes. The tests themselves create/seed their temporary environment.
-
-On Linux/WSL, use `python3 -m venv .venv` and `.venv/bin/python` instead of the Windows executable paths.
-
-## Optional local container launch
-
-After the setup command creates keys and A's seeded database:
 
 ```powershell
-docker compose up --build
+.\.venv\Scripts\python.exe scripts\serve.py C
 ```
 
-Docker Compose execution is pending verification. If you later use Linux containers, use a Linux-created virtual environment for host commands. Do not share a Windows virtual environment with WSL.
+Component A listens at `http://127.0.0.1:8000`, component B at port 8001, and component C at port 8002.
+Each provides a `/health` route. Send login and analysis requests to component A.
+The API has no homepage, so opening just `/` returns 404.
+The [API walkthrough](docs/How_To_Run.md#5-use-the-application) shows login,
+creation, reading, Bob being denied access to Alice's result, and admin
+deletion. Stop each service with Ctrl+C.
 
-## File guide
+## Tests and branch comparison
 
-- `app/urls.py`: routes selected for each process.
-- `app/views.py`: request flow, token checks, model stub, and safe responses.
-- `app/security.py`: A's token issuance and fixed-algorithm verification.
-- `app/store.py`: C's parameterized SQLite queries and owner checks.
-- `helper/`: standalone package built as a wheel and installed.
-- `docs/SSDLC_Plan.md`: initial four-phase plan committed before code.
-- `docs/Design.md`: minimal architecture, assets, access matrix, STRIDE, experiment plans.
-- `docs/AI_Use.md`: draft declaration of AI assistance.
-- `tests/test_flow.py`: integration tests.
+Run the following commands one after the other. They prepare their own test
+data. Manually starting the services first is unnecessary.
 
-The initial planning commit precedes the implementation commit. Preserve the complete Git history when continuing the project. Implementation status and completed checks are recorded in `docs/Verification.md`; remaining work is listed above.
+```powershell
+.\.venv\Scripts\python.exe tests\test_dependency_gate.py
+.\.venv\Scripts\python.exe tests\test_store_sql.py
+.\.venv\Scripts\python.exe tests\test_flow.py
+```
+
+The corrected version should pass six dependency-gate tests, one direct SQL
+test, and ten HTTP tests. The HTTP suite creates temporary accounts, keys, and
+databases. Each component binds an unused loopback port allocated by the
+operating system. Separate runs can therefore execute at the same time.
+
+Use the [branch comparison guide](docs/How_To_Run.md#61-compare-the-vulnerable-and-fixed-branches)
+to repeat both versions. The tests expect secure behavior in both. They
+should fail on the deliberately vulnerable version.
+
+## Jenkins
+
+The [Jenkinsfile](Jenkinsfile) defines the automated build steps. Jenkins
+downloads the selected Git branch, creates a Python environment, installs
+packages and the helper, checks source code with Bandit, checks package
+advisories with pip-audit, runs the tests, and saves reports.
+
+| Stage | What it does |
+|---|---|
+| Checkout | Clears the workspace and downloads the branch selected by the multibranch job. |
+| Build | Finds Python, creates a virtual environment, installs dependencies, and builds and installs the helper package. |
+| Dependency Approval | Rejects installed package names or versions outside the approved requirements and local-helper list. |
+| Static Security Scan | Runs Bandit on `app/` and writes JSON and text reports. |
+| Dependency Audit | Runs pip-audit on `requirements.txt` and saves the results. |
+| Security Gate | Runs a separate Bandit check that fails on high-severity findings. |
+| Tests | Runs dependency-gate, SQL, and HTTP tests. Each suite's exit code is checked. HTTP tests start three temporary component processes with separate ports and fresh keys, users, and databases. |
+
+After the stages, Jenkins archives any generated reports from `reports/`
+and cleans the workspace, including after a failure.
+
+A *security gate* is a rule that makes a build fail when a check does not
+meet the release requirements. The current Bandit gate blocks high-severity
+findings. Dependency approval, package advisories, build errors, and any
+required test failure also block. Build commands use separate steps, and
+the test stage checks all three exit codes.
+
+The Windows computer running Jenkins needs Python 3.12 available as
+`python` through the service account's PATH, plus Git and network access.
+PATH is the list of folders Windows searches for commands. The current
+pipeline prints Python's location/version instead of containing a personal
+installation path. The same pipeline and test harness are used on the
+working and comparison branches.
+
+See [Jenkins setup](docs/How_To_Run.md#8-jenkins-and-cicd) and
+[remaining CI checks](docs/Verification.md#jenkins-evidence-and-gaps).
+
+## Project structure
+
+```text
+repository root/
+├── app/                     Django routes, request handlers, tokens, and storage
+├── ci/approved-local.txt     Approved local helper name and version
+├── helper/
+│   ├── pyproject.toml        Installable helper package definition
+│   └── src/alert_helper/    Alert and result validation functions
+├── scripts/
+│   ├── setup_lab.py         Create keys, database tables, and test users
+│   ├── serve.py             Start one component
+│   ├── serve_test.py        Start a test component on an allocated port
+│   └── check_dependencies.py Check the installed package inventory
+├── tests/
+│   ├── test_dependency_gate.py Package-approval tests
+│   ├── test_flow.py         HTTP, ownership, role, and token tests
+│   └── test_store_sql.py    SQL-injection regression test
+├── examples/request.json    Example alert request
+├── docs/                    Guides, design, SSDLC plan, and requirement checklist
+│   └── evidence/            Saved fixed and vulnerable build reports
+├── manage.py                Django command entry point
+├── requirements.txt         Application dependencies
+├── requirements-build.txt   Build dependencies
+├── requirements-ci.txt      Exact CI-tool and transitive package versions
+├── Jenkinsfile              Automated build, scan, and test steps
+├── Dockerfile               Optional container build
+├── compose.yaml             Optional three-component container setup
+└── README.md                Project overview and quick-start commands
+```
+
+## Documentation
+
+| Document | What to use it for |
+|---|---|
+| [How to run](docs/How_To_Run.md) | Install, run, use, compare versions, and access Jenkins |
+| [Design](docs/Design.md) | Understand the services, tokens, permissions, threats, and design choices |
+| [Terminology](docs/Terminology.md) | Look up technical words and abbreviations |
+| [SSDLC plan](docs/SSDLC_Plan.md) | Read the original plan reference and security activities in each phase |
+| [Requirements traceability](docs/Requirements_Traceability.md) | Find which code and evidence address each assignment requirement |
+| [Verification](docs/Verification.md) | Check actual results, limits, and unfinished work |
+| [Vulnerability experiments](docs/Vulnerability_Experiments_Guide.md) | Understand and repeat the four security experiments |
+| [Isolated composition experiment](docs/Composition_Isolation.md) | Separate the wrong-owner write from the missing read ownership check |
+| [Implementation guide](docs/Implementation_Guide.md) | Learn how to rebuild the application step by step |
+| [AI-use declaration](docs/AI_Use.md) | Review how AI assistance was used |
+| [Jenkins evidence index](docs/evidence/jenkins/README.md) | Find saved reports and information about their source |
+
+## Scope and production limitations
+
+The result is labelled `development-stub`: it is a fixed-format summary,
+not output from a real AI model. Its quality as a real threat assessment
+has not been established. [compose.yaml](compose.yaml) and
+[Dockerfile](Dockerfile) provide an optional container setup, but it has
+not yet been tested.
+
+All three local processes run under the same Windows account. Although the
+application gives them different jobs and API permissions, Windows may let
+them access the same files. Separate service accounts and file permissions
+would be needed to restrict that access. The optional malicious package
+experiment and ZAP scan have no completed evidence here.
+
+The prototype uses local HTTP and Django's development server. Before
+production use it would need encrypted connections, stronger file/process
+isolation, a plan for replacing keys and cancelling credentials, request-rate
+limits, monitoring, backups, and a production server.

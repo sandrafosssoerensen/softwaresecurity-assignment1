@@ -1,0 +1,41 @@
+Run started:2026-10-20 11:51:29.409768+00:00
+
+Test results:
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Low
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html
+   Location: app\store.py:30:18
+29	        # Vulnerable-version snapshot for CWE-89: dynamic SQL construction.
+30	        query = f"SELECT * FROM analyses WHERE id='{analysis_id}'"
+31	        row = db.execute(query).fetchone()
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'Bearer'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: app\views.py:99:25
+98	    return JsonResponse({"access_token": issue(user.pk, "A", "user", "admin" if user.is_staff else "user"),
+99	                         "token_type": "Bearer", "expires_in": 900})
+100	
+101	
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 250
+	Total lines skipped (#nosec): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 1
+		Medium: 1
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 1
+		Medium: 1
+		High: 0
+Files skipped (0):

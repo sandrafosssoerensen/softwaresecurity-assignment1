@@ -1,0 +1,20 @@
+test_injected_analysis_id_does_not_return_a_record (__main__.StoreSqlTests.test_injected_analysis_id_does_not_return_a_record) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.018s
+
+OK
+test_injected_analysis_id_does_not_return_a_record (__main__.StoreSqlTests.test_injected_analysis_id_does_not_return_a_record) ... FAIL
+
+======================================================================
+FAIL: test_injected_analysis_id_does_not_return_a_record (__main__.StoreSqlTests.test_injected_analysis_id_does_not_return_a_record)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\sandr\Desktop\3.SemesterKandidat\3semestercomputerscience\SS\Assignment 1\software-security-v1\software-security-v1\.runtime\worktrees\vulnerable\tests\test_store_sql.py", line 42, in test_injected_analysis_id_does_not_return_a_record
+    self.assertIsNone(result)
+AssertionError: {'id': 'known-analysis', 'owner': '1', 'marker': 'test-record'} is not None
+
+----------------------------------------------------------------------
+Ran 1 test in 0.028s
+
+FAILED (failures=1)

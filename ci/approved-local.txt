@@ -1,0 +1,2 @@
+# Installed from the locally built wheel, not from a package index.
+alert-helper==0.1.0
