@@ -108,8 +108,9 @@ The saved multibranch evidence contains successful builds for
 assignment-work #13, fixed-version #6, and main #1. Vulnerable-version #5 and the isolated
 composition build #1 were blocked as intended. Their console logs, artifacts,
 commits, and build causes are represented by the corresponding folders in the
-evidence index. Jenkins also automatically built the merged `main` revision
-successfully.
+evidence index. All saved builds were started by multibranch branch
+indexing, including the pull-request build. The saved `main` build #1
+covers `bf9bad4`, which precedes the pull-request merges.
 
 ### Scanner findings and release policy
 

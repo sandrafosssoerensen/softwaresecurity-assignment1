@@ -32,13 +32,19 @@ proofreading.
 
 ## Work carried out
 
+The first three commits (`8e1b610`, `7f04cee`, `b2a7c7b`) were created by
+the Codex agent. The plan and starter code were generated from the
+repository owner's description of the system, scope, and security
+requirements, and the repository owner reviewed them before continuing.
+All later commits, including the vulnerability experiments, corrections,
+Jenkins configuration, and evidence, were made by the repository owner.
+
 The repository owner ran commands, tests, security experiments, and Jenkins
 jobs, configured GitHub/Jenkins, managed commits, and supplied console logs
-and reports. The historical saved Jenkins reports contain nine passing HTTP
-tests and one passing direct SQL test. The current local evidence contains
-ten passing HTTP tests and one passing direct SQL test on the corrected
-branch. The newer vulnerable local run shows four HTTP failures and one
-direct SQL failure.
+and reports. The saved Jenkins builds of the corrected branches pass ten
+HTTP tests and one direct SQL test. The vulnerable build (#5) fails four
+HTTP tests and the direct SQL test, and the isolated composition build (#1)
+fails only the owner-field test.
 
 [Verification](Verification.md) contains the test results and known limitations.
 
