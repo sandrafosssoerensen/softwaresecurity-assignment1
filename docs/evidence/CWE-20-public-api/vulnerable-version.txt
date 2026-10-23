@@ -1,0 +1,13 @@
+===== VULNERABLE VERSION (7b082c2 Update certifi after dependency audit) =====
+health 8000: {"service": "A", "status": "ok"}
+health 8001: {"service": "B", "status": "ok"}
+health 8002: {"service": "C", "status": "ok"}
+logged in as bob (ordinary user): token length 583
+request body size: 66287 bytes (Django limit 131072, processing limit 65536)
+> POST http://127.0.0.1:8000/analyses  (Authorization: Bearer <bob token>)
+HTTP_STATUS=201
+response body (first 120 chars): {"id": "86353227-4a89-4dc2-8faa-307ac3aa9ebf", "owner": "2", "original_alert": {"event_type": "alert", "timestamp": "202
+Component B access log:
+[23/Oct/2026 08:54:19] "POST /internal/analyze HTTP/1.1" 201 67155
+Component C access log:
+[23/Oct/2026 08:54:19] "POST /internal/analyses HTTP/1.1" 201 67155

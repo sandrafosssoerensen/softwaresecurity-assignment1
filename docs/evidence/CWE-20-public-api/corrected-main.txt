@@ -1,0 +1,13 @@
+===== CORRECTED VERSION (main, 256ac40) =====
+health 8000: {"service": "A", "status": "ok"}
+health 8001: {"service": "B", "status": "ok"}
+health 8002: {"service": "C", "status": "ok"}
+logged in as bob (ordinary user): token length 583
+request body size: 66287 bytes (Django limit 131072, processing limit 65536)
+> POST http://127.0.0.1:8000/analyses  (Authorization: Bearer <bob token>)
+HTTP_STATUS=413
+response body (first 120 chars): {"error": "INPUT_TOO_LARGE"}
+Component B access log:
+[23/Oct/2026 09:00:19] "POST /internal/analyze HTTP/1.1" 413 28
+Component C access log:
+  (no store request reached C)

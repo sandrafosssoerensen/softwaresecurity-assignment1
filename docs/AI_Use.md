@@ -1,7 +1,8 @@
 # AI-use declaration
 
 ChatGPT/Codex was used for coding, explanations, tests, troubleshooting, and
-documentation. The following list describes that assistance.
+documentation. Claude (Claude Code) was used in the final phase to review the
+repository and report. The following lists describe that assistance.
 
 ## Assistance used
 
@@ -26,6 +27,18 @@ AI helped with:
   requirement checklist, run/learning guides, results, and this declaration.
 - Checking explanations against code and saved results, identifying CI
   issues, and rewriting documentation in plain English.
+
+Claude helped with:
+
+- Reviewing the repository, documentation, and saved evidence against the
+  report and the assignment description, and identifying inconsistencies.
+- Running a manual test of the CWE-20 attack path through Component A on the
+  vulnerable and corrected versions, and saving it as
+  [evidence](evidence/CWE-20-public-api/README.md).
+- Correcting documentation statements about Jenkins build triggers and the
+  saved `main` build.
+- Suggesting revised report text, the Jenkins pipeline figure, and LaTeX
+  corrections, and shortening the report.
 
 The assistance included generated code and text. It was more extensive than
 proofreading.
